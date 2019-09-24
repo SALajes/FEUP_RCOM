@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
 
@@ -93,7 +93,15 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
+    char str[255];
+    buf[0] = 0;
 
+
+    res = read(fd,str,255);
+    str[res] = '\0';
+    res = strcmp(str,buf,res);
+    puts(str);
+    printf("%d\n",res);
 
    
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {

@@ -94,23 +94,19 @@ int main(int argc, char** argv)
   */
 
     char str[255];
-    buf[0] = 0;
 
+    int k = 0;
 
-    res = read(fd,str,255);
-    str[res] = '\0';
-    res = strcmp(str,buf,res);
-    puts(str);
-    printf("%d\n",res);
-
-   
+    while(1) {
+        if (str[k]=='\0') break;
+        k += read(fd, buf+k, 1);
+        puts(buf);
+    }  
+ 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
-
-
-
 
     close(fd);
     return 0;

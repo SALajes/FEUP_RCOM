@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     /*testing*/
     buf[strlen(buf)] = '\0';
 
-    res = write(fd,buf,strlen(buf));   
+    res = write(fd,buf,strlen(buf)+1);   
     printf("%d bytes written\n", res);
  
 
@@ -94,6 +94,8 @@ int main(int argc, char** argv)
 		res = read(fd, &str[i], 1);
 		if(str[i]=='\0') break;
 	}
+
+	puts(str);
 
 	sleep(1);
  

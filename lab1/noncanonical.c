@@ -71,10 +71,10 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-	for(int i=0; STOP==FALSE; i++){
-		res = read(fd, &result[i], 1);
-		if(result[i] == '\0') STOP==TRUE;	
-	} 	
+    for(int i=0; STOP==FALSE; i++){
+        res = read(fd, &result[i], 1);
+	if(result[i] == '\0') STOP=TRUE;	
+    } 	
 
     printf("%s\n",result);
 

@@ -74,11 +74,6 @@ int main(int argc, char** argv)
 
 
 
-//    for (i = 0; i < 255; i++) {
- //     buf[i] = 'a';
-  //  }
-
-   	
 
     gets(buf); 
     /*testing*/
@@ -93,15 +88,15 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
+	int res = 0;
     char str[255];
 
-    int k = 0;
+	for(int i = 0;; i++){
+		res = read(fd, &str[i], 1);
+		if(str[i]=='\0') break;
+	}
 
-    while(1) {
-        if (str[k]=='\0') break;
-        k += read(fd, buf+k, 1);
-        puts(buf);
-    }  
+	sleep(1);
  
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");

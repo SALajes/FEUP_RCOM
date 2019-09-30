@@ -70,17 +70,11 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    char *str = malloc(sizeof(char)*255);
-    int k = 0;
 
-    while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,buf,255); /* returns after 5 chars have been input */
-      buf[res]=0;               /* so we can printf... */
-      k += res;
-      str = strcat(str, buf);
-      puts(str);
-      if (str[k]=='\0') break;
-    }
+	for(int i=0; STOP==FALSE; i++){
+		res = read(fd, &result[i], 1);
+		if(result[i] == '\0') STOP==TRUE;	
+	} 	
 
     printf("%s\n",str);
 
@@ -90,7 +84,7 @@ int main(int argc, char** argv)
 
     sleep(2);
 
-    res = write(fd,str,strlen(str));
+    res = write(fd,str,strlen(str)+1);
     printf("%d bytes written.\n",res);
 
     sleep(1);

@@ -1,4 +1,4 @@
-/*Non-Canonical Input Processing*/
+/*WRITE Non-Canonical Input Processing*/
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -11,6 +11,12 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+
+#define FLAG_RCV 0x7E
+#define A_RCV1 0x03
+#define A_RCV2 0x01
+#define C_RCV1 0x03
+#define C_RCV2 0x07
 
 volatile int STOP=FALSE;
 
@@ -79,7 +85,7 @@ int main(int argc, char** argv)
     /*testing*/
     buf[strlen(buf)] = '\0';
 
-    res = write(fd,buf,strlen(buf)+1);   
+    res = write(fd,buf,strlen(buf));   
     printf("%d bytes written\n", res);
  
 
@@ -88,17 +94,24 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
-    char str[255];
+    char str[6] = ['0x7E', '0x03', '0x03', '0x00', '0x7E']; //THIS IS THE CORRECT MESSAGE
 
-	for(int i = 0;; i++){
-		res = read(fd, &str[i], 1);
-		if(str[i]=='\0') break;
-	}
+    	while(true){
+	  gets(buf);
 
-	puts(str);
+	  
+
+	  for(int i = 0;; i++){
+	    res = read(fd, &str[i], 1);
+	    check_state(str);
+	  }
+	}	
+
+	printf('%s', str);
 
 	sleep(1);
  
+
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);

@@ -88,7 +88,6 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
-	int res = 0;
     char str[255];
 
 	for(int i = 0;; i++){

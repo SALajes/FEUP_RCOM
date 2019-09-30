@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char buf[255];
+    char result[255];
 
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 		if(result[i] == '\0') STOP==TRUE;	
 	} 	
 
-    printf("%s\n",str);
+    printf("%s\n",result);
 
   /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
     sleep(2);
 
-    res = write(fd,str,strlen(str)+1);
+    res = write(fd,result,strlen(result)+1);
     printf("%d bytes written.\n",res);
 
     sleep(1);

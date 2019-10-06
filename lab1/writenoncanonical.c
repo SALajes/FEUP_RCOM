@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include "set_stmachine.h"
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
@@ -18,7 +19,7 @@
 #define C_RCV1 0x03
 #define C_RCV2 0x07
 
-volatile int STOP=FALSE;
+volatile int STOP = 0;
 
 int main(int argc, char** argv)
 {
@@ -27,7 +28,7 @@ int main(int argc, char** argv)
     char buf[255];
     int i, sum = 0, speed = 0;
     
-    if ( (argc < 2) || 
+    if ((argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
@@ -78,9 +79,6 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-
-
-
     gets(buf); 
     /*testing*/
     buf[strlen(buf)] = '\0';
@@ -94,17 +92,16 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
-    char str[6] = ['0x7E', '0x03', '0x03', '0x00', '0x7E']; //THIS IS THE CORRECT MESSAGE
+    char str[6] = {"0x7E", "0x03", "0x03", "0x00", "0x7E"}; //THIS IS THE CORRECT MESSAGE
 
-    	while(true){
-	  gets(buf);
+    states state_machine = START;
 
-	  
-
-	  for(int i = 0;; i++){
-	    res = read(fd, &str[i], 1);
-	    check_state(str);
-	  }
+    while(1) {
+        gets(buf);
+        for(int i = 0; ; i++){
+            res = read(fd, &str[i], 1);
+            advance_state(str[i], state_machine);
+        }
 	}	
 
 	printf('%s', str);

@@ -3,7 +3,6 @@
 *  
 *
 */
-
 #define FLAG_RCV 0x7E
 #define A_SND 0x03
 #define A_RCV 0x01
@@ -21,3 +20,5 @@ typedef enum {
     STOP 
 } states;
 
+int advance_state_SET(char byte, states state);
+int advance_state_UA(char byte, states state);

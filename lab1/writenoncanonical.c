@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
-#include "set_stmachine.h"
+#include "state_machine.h"
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
+    leitura do(s) prï¿½ximo(s) caracter(es)
   */
 
 
@@ -88,8 +88,8 @@ int main(int argc, char** argv)
  
 
   /* 
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
-    o indicado no guião 
+    O ciclo FOR e as instruï¿½ï¿½es seguintes devem ser alterados de modo a respeitar 
+    o indicado no guiï¿½o 
   */
 
     char str[6] = {"0x7E", "0x03", "0x03", "0x00", "0x7E"}; //THIS IS THE CORRECT MESSAGE

@@ -72,18 +72,16 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    states *state_machine = START;
+    states state_machine = START;
 
-    for (int i = 0; stop_var == 0; i++) {
+    for (int i = 0; state_machine != STOP; i++) {
         res = read(fd, &result[i], 1);
-          printf("%X", &result[i]);
-        if (result[i] == '\0') stop_var = 1;	
-        else {
-          advance_state_SET(result[i], &state_machine);
-        }
+        printf("%X\n", &result[i]);
+        printf("%d\n", state_machine);
+        advance_state_SET(result[i], &state_machine);
     } 	
 
-    if(*state_machine == STOP){
+    if(state_machine == STOP){
       char str[6] = {'0x7E', '0x01', '0x07', '0x06', '0x7E'}; //THIS IS THE CORRECT MESSAGE
 
       write(fd,str,strlen(str)); 
@@ -98,12 +96,7 @@ int main(int argc, char** argv)
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
   */
 
-    sleep(2);
-
-    res = write(fd,result,strlen(result)+1);
-    printf("%d bytes written.\n",res);
-
-    sleep(1);
+    sleep(3);
 
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);

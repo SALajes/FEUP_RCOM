@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char result[255];
+    int result[255];
 
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -75,19 +75,16 @@ int main(int argc, char** argv)
     states state_machine = START;
 
     for (int i = 0; state_machine != STOP; i++) {
-        res = read(fd, &result[i], 1);
-        printf("%X\n", &result[i]);
-        printf("%d\n", state_machine);
-        advance_state_SET(result[i], &state_machine);
+        res = read(fd, &result[i], 4);
+        printf("BYTE: %#x\n", result[i]);
+        advance_state_UA(result[i], &state_machine);
+        printf("STATE: %d\n", state_machine);
     } 	
 
-    if(state_machine == STOP){
-      char str[6] = {'0x7E', '0x01', '0x07', '0x06', '0x7E'}; //THIS IS THE CORRECT MESSAGE
+    if (state_machine == STOP){
+      int str[5] = {0x7E, 0x01, 0x07, 0x06, 0x7E}; //THIS IS THE CORRECT MESSAGE
 
-      write(fd,str,strlen(str)); 
-
-      for(int i=0; i < strlen(result); i++)
-        printf("%X", &result[i]);
+      write(fd,str,sizeof(int)*5); 
     }
     else printf("failed");
 

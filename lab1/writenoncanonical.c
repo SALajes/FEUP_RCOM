@@ -81,7 +81,7 @@ int main(int argc, char** argv)
   printf("New termios structure set\n");
 
   /*testing*/
-  char str[6] = {'0x7E', '0x03', '0x03', '0x00', '0x7E'}; //THIS IS THE CORRECT MESSAGE
+  int str[6] = {'0x7E', '0x03', '0x03', '0x00', '0x7E'}; //THIS IS THE CORRECT MESSAGE
   
   res = write(fd,str,strlen(str));   
   
@@ -98,8 +98,8 @@ int main(int argc, char** argv)
 
   for (int i = 0; ; i++) {
       res = read(fd, &buf[i], 1);
-      printf("%X", buf[i]);
-      advance_state_UA(buf[i], state_machine);
+      printf("%#x", (int)buf[i]);
+      advance_state_UA((int)buf[i], state_machine);
   }
 
   for(int i=0; i < strlen(buf); i++)

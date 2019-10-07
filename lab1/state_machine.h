@@ -12,7 +12,7 @@
 #define BCC_RCV A_RCV ^ C_RCV
 
 typedef enum {
-    START,
+    START = 0,
     FLAG_OK,
     A_OK,
     C_OK,

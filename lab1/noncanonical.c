@@ -12,7 +12,14 @@
 #define FALSE 0
 #define TRUE 1
 
+int counter = 0;
+
 volatile int stop_var= 0;
+
+void alarm_handler() {
+    counter++;
+    printf("Connection from receiver timed out after %d tries.\n", counter);
+}
 
 int main(int argc, char** argv)
 {
@@ -72,21 +79,26 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    states state_machine = START;
+    while (counter < 3) {
+        alarm(3);
 
-    for (int i = 0; state_machine != STOP; i++) {
-        res = read(fd, &result[i], 4);
-        printf("BYTE: %#x\n", result[i]);
-        advance_state_UA(result[i], &state_machine);
-        printf("STATE: %d\n", state_machine);
-    } 	
+        states state_machine = START;
 
-    if (state_machine == STOP){
-      int str[5] = {0x7E, 0x01, 0x07, 0x06, 0x7E}; //THIS IS THE CORRECT MESSAGE
+        for (int i = 0; state_machine != STOP; i++) {
+            res = read(fd, &result[i], 4);
+            printf("BYTE: %#x\n", result[i]);
+            advance_state_UA(result[i], &state_machine);
+            printf("STATE: %d\n", state_machine);
+        } 	
 
-      write(fd,str,sizeof(int)*5); 
+        if (state_machine == STOP){
+          int str[5] = {0x7E, 0x01, 0x07, 0x06, 0x7E}; //THIS IS THE CORRECT MESSAGE
+
+          write(fd,str,sizeof(int)*5); 
+        }
+        else printf("failed");
     }
-    else printf("failed");
+
 
 
   /* 

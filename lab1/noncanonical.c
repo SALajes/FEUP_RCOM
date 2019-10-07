@@ -72,18 +72,27 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    states state_machine = START;
-
+    states *state_machine = START;
 
     for (int i = 0; stop_var == 0; i++) {
         res = read(fd, &result[i], 1);
+          printf("%X", &result[i]);
         if (result[i] == '\0') stop_var = 1;	
         else {
-            advance_state_UA(result[i], state_machine);
+          advance_state_SET(result[i], &state_machine);
         }
     } 	
 
-    printf("%s\n",result);
+    if(*state_machine == STOP){
+      char str[6] = {'0x7E', '0x01', '0x07', '0x06', '0x7E'}; //THIS IS THE CORRECT MESSAGE
+
+      write(fd,str,strlen(str)); 
+
+      for(int i=0; i < strlen(result); i++)
+        printf("%X", &result[i]);
+    }
+    else printf("failed");
+
 
   /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 

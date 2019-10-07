@@ -20,5 +20,5 @@ typedef enum {
     STOP 
 } states;
 
-int advance_state_SET(char byte, states state);
-int advance_state_UA(char byte, states state);
+int advance_state_SET(char byte, states *state);
+int advance_state_UA(char byte, states *state);

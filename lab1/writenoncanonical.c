@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "state_machine.h"
+#include <unistd.h>
+#include <signal.h>
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
@@ -21,13 +23,22 @@
 #define C_RCV1 0x03
 #define C_RCV2 0x07
 
+int counter = 0;
+
+void alarm_handler() {
+    counter++;
+    printf("Connection from sender timed out after %d tries.\n", counter);
+}
+
 int main(int argc, char** argv)
 {
   int fd,c, res;
   struct termios oldtio,newtio;
   int buf[255];
   int i, sum = 0, speed = 0;
-  
+ 
+  signal(SIGALRM, alarm_handler);
+
   if ((argc < 2) || 
         ((strcmp("/dev/ttyS0", argv[1])!=0) && 
         (strcmp("/dev/ttyS1", argv[1])!=0) && 
@@ -83,28 +94,29 @@ int main(int argc, char** argv)
   /*testing*/
   int str[5] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
   
-  res = write(fd,str,sizeof(int)*5);   
-  
-  printf("%d bytes written\n", res);
+  while (counter < 3) {
+      res = write(fd,str,sizeof(int)*5);   
+      
+      printf("%d bytes written\n", res);
 
+      alarm(3);
 
-  sleep(2);
-/* 
-  O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
-  o indicado no gui�o 
-*/
+    /* 
+      O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
+      o indicado no gui�o 
+    */
 
-  states state_machine = START;
+      states state_machine = START;
 
-  for (int i = 0; state_machine != STOP; i++) {
-      res = read(fd, &buf[i], 4);
-      printf("BYTE: %#x\n", buf[i]);
-      advance_state_SET(buf[i], &state_machine);
-      printf("STATE: %d\n", state_machine);
+      for (int i = 0; state_machine != STOP; i++) {
+          res = read(fd, &buf[i], 4);
+          printf("BYTE: %#x\n", buf[i]);
+          advance_state_SET(buf[i], &state_machine);
+          printf("STATE: %d\n", state_machine);
+      }
   }
 
-	sleep(1);
- 
+   sleep(1);
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");

@@ -5,13 +5,14 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include "state_machine.h"
 
 #define BAUDRATE B9600
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
 
-volatile int STOP=FALSE;
+volatile int stop_var= 0;
 
 int main(int argc, char** argv)
 {
@@ -21,7 +22,8 @@ int main(int argc, char** argv)
 
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
+  	      (strcmp("/dev/ttyS1", argv[1])!=0) && 
+          (strcmp("/dev/ttyS2", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -70,10 +72,15 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
+    states state_machine = START;
 
-    for(int i=0; STOP==FALSE; i++){
+
+    for (int i = 0; stop_var == 0; i++) {
         res = read(fd, &result[i], 1);
-	if(result[i] == '\0') STOP=TRUE;	
+        if (result[i] == '\0') stop_var = 1;	
+        else {
+            advance_state_UA(result[i], state_machine);
+        }
     } 	
 
     printf("%s\n",result);

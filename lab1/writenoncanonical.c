@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
   tcflush(fd, TCIOFLUSH);
 
-  if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
+  if (tcsetattr(fd,TCSANOW,&newtio) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
@@ -96,14 +96,11 @@ int main(int argc, char** argv)
 
   states *state_machine = START;
 
-  while(1) {
-      gets(buf);
-      for(int i = 0; ; i++){
-          res = read(fd, &buf[i], 1);
-          printf("%X", buf[i]);
-          advance_state_UA(buf[i], state_machine);
-      }
-  }	
+  for (int i = 0; ; i++) {
+      res = read(fd, &buf[i], 1);
+      printf("%X", buf[i]);
+      advance_state_UA(buf[i], state_machine);
+  }
 
   for(int i=0; i < strlen(buf); i++)
       printf("%X", &buf[i]);

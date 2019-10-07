@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 {
   int fd,c, res;
   struct termios oldtio,newtio;
-  char buf[255];
+  int buf[255];
   int i, sum = 0, speed = 0;
   
   if ((argc < 2) || 
@@ -81,9 +81,9 @@ int main(int argc, char** argv)
   printf("New termios structure set\n");
 
   /*testing*/
-  char str[6] = {'0x7E', '0x03', '0x03', '0x00', '0x7E'}; //THIS IS THE CORRECT MESSAGE
+  int str[5] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
   
-  res = write(fd,str,strlen(str));   
+  res = write(fd,str,sizeof(int)*5);   
   
   printf("%d bytes written\n", res);
 
@@ -94,16 +94,14 @@ int main(int argc, char** argv)
   o indicado no gui�o 
 */
 
-  states *state_machine = START;
+  states state_machine = START;
 
-  for (int i = 0; ; i++) {
-      res = read(fd, &buf[i], 1);
-      printf("%X", buf[i]);
-      advance_state_UA(buf[i], state_machine);
+  for (int i = 0; state_machine != STOP; i++) {
+      res = read(fd, &buf[i], 4);
+      printf("BYTE: %#x\n", buf[i]);
+      advance_state_SET(buf[i], &state_machine);
+      printf("STATE: %d\n", state_machine);
   }
-
-  for(int i=0; i < strlen(buf); i++)
-      printf("%X", &buf[i]);
 
 	sleep(1);
  

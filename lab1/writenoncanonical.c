@@ -100,13 +100,13 @@ int main(int argc, char** argv)
       gets(buf);
       for(int i = 0; ; i++){
           res = read(fd, &buf[i], 1);
-          printf("%X", buf);
+          printf("%X", buf[i]);
           advance_state_UA(buf[i], state_machine);
       }
   }	
 
-  for(int i=0; i < strlen(result); i++)
-      printf("%X", &result[i]);
+  for(int i=0; i < strlen(buf); i++)
+      printf("%X", &buf[i]);
 
 	sleep(1);
  

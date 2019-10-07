@@ -48,7 +48,7 @@ int advance_state_SET(char byte, states *state) {
     else if (byte == STOP) {}
 }
 
-int advance_state_UA(char byte, states **state) {
+int advance_state_UA(char byte, states *state) {
     if (*state == START) {
         if (byte == FLAG_RCV) {
             *state = FLAG_OK;

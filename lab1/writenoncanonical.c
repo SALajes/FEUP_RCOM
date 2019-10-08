@@ -24,16 +24,32 @@
 #define C_RCV2 0x07
 
 int counter = 0;
+int str[5] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
+int fd, res;
+struct termios oldtio,newtio;
 
 void alarm_handler() {
+    if (counter == 3) {
+        close(fd)
+        exit(1);
+    }
     counter++;
     printf("Connection from sender timed out after %d tries.\n", counter);
+    write_info();
+}
+
+
+void write_info() {
+    res = write(fd,str,sizeof(int)*5);   
+
+    printf("%d bytes written\n", res);
+
+    alarm(1);
 }
 
 int main(int argc, char** argv)
 {
-  int fd,c, res;
-  struct termios oldtio,newtio;
+  int c;
   int buf[255];
   int i, sum = 0, speed = 0;
  
@@ -92,33 +108,26 @@ int main(int argc, char** argv)
   printf("New termios structure set\n");
 
   /*testing*/
-  int str[5] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
-  
-  while (counter < 3) {
-      res = write(fd,str,sizeof(int)*5);   
-      
-      printf("%d bytes written\n", res);
 
-      alarm(3);
+/* 
+  O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
+  o indicado no gui�o 
+*/
 
-    /* 
-      O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
-      o indicado no gui�o 
-    */
+    write_info();
 
-      states state_machine = START;
+    states state_machine = START;
 
-      for (int i = 0; state_machine != STOP; i++) {
-          res = read(fd, &buf[i], 4);
-          printf("BYTE: %#x\n", buf[i]);
-          advance_state_SET(buf[i], &state_machine);
-          printf("STATE: %d\n", state_machine);
-      }
-  }
+    for (int i = 0; state_machine != STOP; i++) {
+        res = read(fd, &buf[i], 4);
+        printf("BYTE: %#x\n", buf[i]);
+        advance_state_SET(buf[i], &state_machine);
+        printf("STATE: %d\n", state_machine);
+    }
 
-   sleep(1);
+    sleep(1);
 
-    if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+    if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }

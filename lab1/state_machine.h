@@ -8,8 +8,8 @@
 #define A_RCV 0x01
 #define C_SND 0x03
 #define C_RCV 0x07
-#define BCC_SND A_SND ^ C_SND
-#define BCC_RCV A_RCV ^ C_RCV
+#define BCC_SND (A_SND ^ C_SND)
+#define BCC_RCV (A_RCV ^ C_RCV)
 
 typedef enum {
     START = 0,
@@ -20,5 +20,5 @@ typedef enum {
     STOP = 5 
 } states;
 
-int advance_state_SET(int byte, states *state);
-int advance_state_UA(int byte, states *state);
+void advance_state_SET(int byte, states *state);
+void advance_state_UA(int byte, states *state);

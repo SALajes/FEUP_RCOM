@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-int advance_state_SET(int byte, states *state) {
+void advance_state_SET(int byte, states *state) {
     if (*state == START) {
         if (byte == FLAG_RCV) {
             *state = FLAG_OK;
@@ -48,7 +48,7 @@ int advance_state_SET(int byte, states *state) {
     else if (*state == STOP) {}
 }
 
-int advance_state_UA(int byte, states *state) {
+void advance_state_UA(int byte, states *state) {
     if (*state == START) {
         if (byte == FLAG_RCV) {
             *state = FLAG_OK;

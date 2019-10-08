@@ -30,7 +30,7 @@ struct termios oldtio,newtio;
 
 void alarm_handler() {
     if (counter == 3) {
-        close(fd)
+        close(fd);
         exit(1);
     }
     counter++;

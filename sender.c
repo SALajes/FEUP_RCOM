@@ -16,6 +16,7 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define STRSIZE 5
 
 #define FLAG_RCV 0x7E
 #define A_RCV1 0x03
@@ -24,7 +25,7 @@
 #define C_RCV2 0x07
 
 int counter = 0;
-unsigned char str[5] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
+unsigned char str[STRSIZE] = {0x7E, 0x03, 0x03, 0x00, 0x7E}; //THIS IS THE CORRECT MESSAGE
 int fd, res;
 struct termios oldtio, newtio;
 
@@ -34,6 +35,7 @@ void alarm_handler()
 
   if (counter == 3)
   {
+    printf("Could not connect to receiver. Halting execution...\n");
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
     {
       perror("tcsetattr");
@@ -44,23 +46,43 @@ void alarm_handler()
     exit(-1);
   }
   counter++;
-  printf("Connection from sender timed out after %d tries.\n", counter);
+  printf("Connection timed out. Retrying... (attempt number %d) \n", counter);
   write_info();
 }
 
 void write_info()
 {
-  res = write(fd, str, 5);
+  res = write(fd, str, STRSIZE);
 
   printf("%d bytes written\n", res);
 
   alarm(3);
 }
 
+char *stuff(char *array)
+{
+  char *aux_array = malloc(STRSIZE * 2);
+  unsigned int i, j;
+  for (i = 0, j = 0; i < STRSIZE; i++, j++)
+  {
+    if (array[i] == 0x7E)
+    {
+      aux_array[j] = 0x7D;
+      aux_array[j + 1] = 0x5E;
+      j++;
+    }
+    else
+    {
+      aux_array[j] = array[i];
+    }
+  }
+  return aux_array;
+}
+
 int main(int argc, char **argv)
 {
   int c;
-  unsigned char buf[255];
+  unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
 
   signal(SIGALRM, alarm_handler);
@@ -136,6 +158,8 @@ int main(int argc, char **argv)
     advance_state_SET(buf[i], &state_machine);
     printf("STATE: %d\n", state_machine);
   }
+
+  stuff(str);
 
   sleep(1);
 

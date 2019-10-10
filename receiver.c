@@ -12,16 +12,6 @@
 #define FALSE 0
 #define TRUE 1
 
-int counter = 0;
-
-volatile int stop_var = 0;
-
-void alarm_handler()
-{
-  counter++;
-  printf("Connection from receiver timed out after %d tries.\n", counter);
-}
-
 int main(int argc, char **argv)
 {
   int fd, c, res;
@@ -104,7 +94,7 @@ int main(int argc, char **argv)
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
   */
 
-  sleep(3);
+  sleep(1);
 
   tcsetattr(fd, TCSANOW, &oldtio);
   close(fd);

@@ -59,9 +59,9 @@ void write_info()
   alarm(3);
 }
 
-char *stuff(char *array)
+unsigned char *stuff(char *array)
 {
-  char *aux_array = malloc(STRSIZE * 2);
+  unsigned char *aux_array = malloc(STRSIZE * 2);
   unsigned int i, j;
   for (i = 0, j = 0; i < STRSIZE; i++, j++)
   {
@@ -77,6 +77,18 @@ char *stuff(char *array)
     }
   }
   return aux_array;
+}
+
+unsigned char makeBcc(char *data_field)
+{
+  unsigned char Bcc = data_field[0];
+
+  for (int i = 1; i < STRSIZE; i++)
+  {
+    Bcc = Bcc ^ data_field[i];
+  }
+
+  return Bcc;
 }
 
 int main(int argc, char **argv)

@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-void advance_state_SET(char byte, states *state)
+void advance_state_SET(unsigned char byte, states *state)
 {
     if (*state == START)
     {
@@ -69,7 +69,7 @@ void advance_state_SET(char byte, states *state)
     }
 }
 
-void advance_state_UA(char byte, states *state)
+void advance_state_UA(unsigned char byte, states *state)
 {
     if (*state == START)
     {

@@ -15,6 +15,12 @@
 #define BCC_SND (A_SND ^ C_SND)
 #define BCC_RCV (A_RCV ^ C_RCV)
 
+#define ESC_OCT 0x7D
+#define ESC_STF ESC_OCT ^ 0x20
+#define FLAG_OCT 0x7E
+#define FLAG_STF FLAG_RCV ^ 0x20
+
+
 #define TRANSMITTER 0
 #define RECEIVER 1
 

@@ -10,11 +10,11 @@ all: clean sender receiver
 
 sender:
 			@echo "Building sender..."
-			$(CC) sender.c $(dep) -o sender
+			$(CC) sender.c $(dep) -o sender.o
 
 receiver: 
 			@echo "Building receiver..."
-			$(CC) receiver.c $(dep) -o receiver
+			$(CC) receiver.c $(dep) -o receiver.o
 
 
 clean:

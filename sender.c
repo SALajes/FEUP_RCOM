@@ -9,8 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "llmacros.h"
-#include "packet_factory.h"
-#include "state_machine.h"
+#include "interface.h"
 
 
 #define BAUDRATE B9600
@@ -22,22 +21,8 @@
 appLayer app;
 linkLayer llink;
 
-int counter = 0;
-void (*alarm_func)();
-extern char packet[255];
-int fd, res;
-struct termios oldtio, newtio;
 
 
-
-
-void send_data_packet() {
-  res = write(fd, packet, STRSIZE);
-
-  printf("%d bytes written\n", res);
-
-  alarm(3);
-}
 
 int main(int argc, char** argv) {
   char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
@@ -47,8 +32,6 @@ int main(int argc, char** argv) {
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
 
-  signal(SIGALRM, alarm_handler);
-
   if ((argc < 2) ||
       ((strcmp(COM_1, argv[1]) != 0) && (strcmp(COM_2, argv[1]) != 0) &&
        (strcmp(COM_3, argv[1]) != 0))) {
@@ -56,25 +39,18 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  makePacket(header, field_data);
-  write_info();
-
-  states state_machine = START;
-
-  for (int i = 0; state_machine != STOP; i++) {
-    res = read(fd, &buf[i], 1);
-    printf("BYTE: %#x\n", buf[i]);
-    advance_state_SET(buf[i], &state_machine);
-    printf("STATE: %d\n", state_machine);
-  }
+  llink.baudRate = BAUDRATE;
+  llink.timeout = 5;
+  llink.numTransmissions = 3;
+  llopen(0,TRANSMITTER);
 
   sleep(1);
 
-  if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
 
-  close(fd);
+  close(app.fileDescriptor);
   return 0;
 }

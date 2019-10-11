@@ -1,5 +1,6 @@
 #include "interface.h"
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,9 +32,13 @@ void alarm_handler() {
     close(app.fileDescriptor);
     exit(-1);
   }
-  llink.numTransmissions++;
+  counter++;
   printf("Connection timed out. Retrying... (attempt number %d) \n",
-         llink.numTransmissions);
+         counter);
+  if(app.status == TRANSMITTER){
+    write(app.fileDescriptor, llink.frame, llink.frame_size);
+  }
+  alarm(llink.timeout);
 }
 
 char* getPort(int port) {
@@ -98,6 +103,14 @@ int llopen(int port, int flag) {
   int fd;
   char* path;
 
+  if(flag != TRANSMITTER && flag != RECEIVER){
+    perror("Wrong flag");
+    return -1;
+  }
+
+  app.status = flag;
+  llink.frame_size = 5;
+
   path = getPort(port);
 
   fd = open(path, O_RDWR | O_NOCTTY);
@@ -112,6 +125,8 @@ int llopen(int port, int flag) {
     return -1;
   }
 
+  signal(SIGALRM, alarm_handler);
+
   strcpy(llink.port, path);
   free(path);
 
@@ -125,8 +140,7 @@ int llopen(int port, int flag) {
       llopenR(fd);
       break;
     default:
-      perror("Wrong flag");
-      return -1;
+      
       break;
   }
 
@@ -141,6 +155,7 @@ void llopenR(int fd) {
   states state = START;
 
   makeUA(uaArr);
+
 
   // Receive SET
   while (1) {
@@ -182,6 +197,8 @@ void llopenT(int fd) {
   states state = START;
 
   makeSET(setArr);
+
+  memcpy(llink.frame,setArr,5);
 
   while (1) {
     if (counter == llink.numTransmissions) {

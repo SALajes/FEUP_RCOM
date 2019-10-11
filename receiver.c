@@ -1,102 +1,52 @@
-/*Non-Canonical Input Processing*/
-
-#include <sys/types.h>
-#include <sys/stat.h>
+/*WRITE Non-Canonical Input Processing*/
 #include <fcntl.h>
-#include <termios.h>
+#include <signal.h>
 #include <stdio.h>
-#include "state_machine.h"
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
+#include "interface.h"
+#include "llmacros.h"
 
 #define BAUDRATE B9600
+#define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
 
-int main(int argc, char **argv)
-{
-  int fd, c, res;
-  struct termios oldtio, newtio;
-  char result[255];
+appLayer app;
+linkLayer llink;
+
+int main(int argc, char** argv) {
+  char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
+                          0x7E};  // THIS IS THE CORRECT MESSAGE
+  char field_data[256] = "amizade na faculdade de Engenharia";
+  int c;
+  unsigned char buf[STRSIZE];
+  int i, sum = 0, speed = 0;
 
   if ((argc < 2) ||
-      ((strcmp("/dev/ttyS0", argv[1]) != 0) &&
-       (strcmp("/dev/ttyS1", argv[1]) != 0) &&
-       (strcmp("/dev/ttyS2", argv[1]) != 0)))
-  {
-    printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
+      ((strcmp(COM_1, argv[1]) != 0) && (strcmp(COM_2, argv[1]) != 0) &&
+       (strcmp(COM_3, argv[1]) != 0))) {
+    printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
     exit(1);
   }
 
-  /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-  */
+  llink.baudRate = BAUDRATE;
+  llink.timeout = 5;
+  llink.numTransmissions = 3;
+  llopen(0, RECEIVER);
 
-  fd = open(argv[1], O_RDWR | O_NOCTTY);
-  if (fd < 0)
-  {
-    perror(argv[1]);
-    exit(-1);
-  }
+  sleep(1);
 
-  if (tcgetattr(fd, &oldtio) == -1)
-  { /* save current port settings */
-    perror("tcgetattr");
-    exit(-1);
-  }
-
-  bzero(&newtio, sizeof(newtio));
-  newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-  newtio.c_iflag = IGNPAR;
-  newtio.c_oflag = 0;
-
-  /* set input mode (non-canonical, no echo,...) */
-  newtio.c_lflag = 0;
-
-  newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-  newtio.c_cc[VMIN] = 1;  /* blocking read until 5 chars received */
-
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) pr�ximo(s) caracter(es)
-  */
-
-  tcflush(fd, TCIOFLUSH);
-
-  if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-  {
+  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
 
-  printf("New termios structure set\n");
-
-  states state_machine = START;
-
-  for (int i = 0; state_machine != STOP; i++)
-  {
-    res = read(fd, &result[i], 1);
-    printf("BYTE: %#x\n", result[i]);
-    advance_state_UA(result[i], &state_machine);
-    printf("STATE: %d\n", state_machine);
-  }
-
-  if (state_machine == STOP)
-  {
-    unsigned char str[5] = {0x7E, 0x01, 0x07, 0x06, 0x7E}; //THIS IS THE CORRECT MESSAGE
-
-    write(fd, str, 5);
-  }
-  else
-    printf("failed");
-
-  /* 
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
-  */
-
-  sleep(1);
-
-  tcsetattr(fd, TCSANOW, &oldtio);
-  close(fd);
+  close(app.fileDescriptor);
   return 0;
 }

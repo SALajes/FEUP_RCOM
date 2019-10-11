@@ -3,10 +3,10 @@ CC = gcc
 SRCS := $(wildcard *.c)
 BINS := $(SRCS:%.c=%)
 
-dep := packet_factory.c state_machine.c
+dep := packet_factory.c state_machine.c interface.c
 
 
-all: sender receiver
+all: clean sender receiver
 
 sender:
 			@echo "Building sender..."

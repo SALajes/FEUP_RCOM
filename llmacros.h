@@ -42,6 +42,7 @@ typedef struct  {
   unsigned int timeout;           /*Valor do temporizador: 1 s*/
   unsigned int numTransmissions;  /*Número de tentativas em caso de falha*/
   char frame[255];                /*Trama*/
+  unsigned int frame_size;
 } linkLayer;
 
 #endif

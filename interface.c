@@ -175,7 +175,7 @@ void llopenR(int fd) {
     }
     alarm(0);
 
-    if ((buf[1] ^ buf[2]) != BCC_SND) {
+    if ((buf[1] ^ buf[2]) != buf[3] && buf[3] != BCC_SND) {
       bzero(buf, 5);
       counter++;
       continue;
@@ -231,3 +231,15 @@ void llopenT(int fd) {
     break;
   }
 }
+
+int llwrite(int fd, char* buffer, int length){
+  if (length <= 0){
+    perror("length 0 or less");
+    return -1;
+  }
+
+
+
+}
+
+

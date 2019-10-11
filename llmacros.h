@@ -11,7 +11,14 @@
 #define A_SND 0x03
 #define A_RCV 0x01
 #define C_SND 0x03
+#define C_DISC 0x0B
 #define C_RCV 0x07
+#define C_RR1  0x05
+#define C_RR0  0x85
+#define C_REJ0 0x01
+#define C_REJ1 0x81
+#define C_I0  0x00
+#define C_I1  0x40
 #define BCC_SND (A_SND ^ C_SND)
 #define BCC_RCV (A_RCV ^ C_RCV)
 
@@ -20,18 +27,18 @@
 #define FLAG_OCT 0x7E
 #define FLAG_STF FLAG_RCV ^ 0x20
 
-
 #define TRANSMITTER 0
 #define RECEIVER 1
 
 typedef enum
 {
     START = 0,
-    FLAG_OK = 1,
-    A_OK = 2,
-    C_OK = 3,
-    BCC_OK = 4,
-    STOP = 5
+    FLAG_OK ,
+    A_OK ,
+    C_OK ,
+    BCC_OK,
+    DATA_R,
+    STOP 
 } states;
 
 typedef struct  {
@@ -50,5 +57,14 @@ typedef struct  {
   char frame[255];                /*Trama*/
   unsigned int frame_size;
 } linkLayer;
+
+typedef enum{
+  SET,
+  DISC,
+  UA,
+  RR,
+  REJ, 
+  CPRT
+} control_t;
 
 #endif

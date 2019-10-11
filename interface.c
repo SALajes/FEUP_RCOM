@@ -33,9 +33,8 @@ void alarm_handler() {
     exit(-1);
   }
   counter++;
-  printf("Connection timed out. Retrying... (attempt number %d) \n",
-         counter);
-  if(app.status == TRANSMITTER){
+  printf("Connection timed out. Retrying... (attempt number %d) \n", counter);
+  if (app.status == TRANSMITTER) {
     write(app.fileDescriptor, llink.frame, llink.frame_size);
   }
   alarm(llink.timeout);
@@ -103,7 +102,7 @@ int llopen(int port, int flag) {
   int fd;
   char* path;
 
-  if(flag != TRANSMITTER && flag != RECEIVER){
+  if (flag != TRANSMITTER && flag != RECEIVER) {
     perror("Wrong flag");
     return -1;
   }
@@ -140,7 +139,7 @@ int llopen(int port, int flag) {
       llopenR(fd);
       break;
     default:
-      
+
       break;
   }
 
@@ -155,7 +154,6 @@ void llopenR(int fd) {
   states state = START;
 
   makeUA(uaArr);
-
 
   // Receive SET
   while (1) {
@@ -198,7 +196,7 @@ void llopenT(int fd) {
 
   makeSET(setArr);
 
-  memcpy(llink.frame,setArr,5);
+  memcpy(llink.frame, setArr, 5);
 
   while (1) {
     if (counter == llink.numTransmissions) {
@@ -232,14 +230,61 @@ void llopenT(int fd) {
   }
 }
 
-int llwrite(int fd, char* buffer, int length){
-  if (length <= 0){
+int llwrite(int fd, char* buffer, int length) {
+  unsigned char I[255], header[5], buf[255], data_packet[255];
+  int res;
+  states state = START;
+  if (length <= 0) {
     perror("length 0 or less");
     return -1;
   }
+  makePacket(buffer, length, llink.sequenceNumber);
 
+  // Send I packet
+  res = write(fd, llink.frame, llink.frame_size);
+  
+  while (1) {
+    if (counter == llink.numTransmissions) {
+      perror("Exceeded max number of tries. Exiting");
+      exit(-1);
+    }
+    size_t i;
+    control_t Spacket;
 
+    // Receive RR or REJ
+    alarm(5);
+    for (i = 0; state != STOP; i++) {
+      res = read(fd, &buf[i], 1);
+      printf("BYTE: %#x\n", buf[i]);
+      advance_state_RR(buf[i], &state);
+      printf("STATE: %d\n", state);
+    }
+    alarm(0);
 
+    if(buf[3] != (buf[2] ^ buf[3])){
+      counter++;
+      continue;
+    }
+
+    Spacket = what_Spacket(buf);
+
+    switch (Spacket) {
+      case RR:
+        if((llink.sequenceNumber && buf[3] == C_RR0) || (!llink.sequenceNumber && buf[3] == C_RR1))
+          return llink.frame_size;
+        break;
+      case REJ:
+        res = write(fd, llink.frame, llink.frame_size);
+        counter++;
+        continue;
+      default:
+        return -1;
+        break;
+    }
+
+    break;
+  }
+
+  llink.sequenceNumber = !llink.sequenceNumber;
+  return res;
 }
-
-

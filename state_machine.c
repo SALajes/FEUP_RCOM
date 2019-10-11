@@ -1,5 +1,6 @@
 #include "state_machine.h"
 
+
 void advance_state_SET(char byte, states* state) {
   switch (*state) {
     case START:

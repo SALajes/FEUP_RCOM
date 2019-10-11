@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "llmacros.h"
 
 char packet[255];
 
@@ -31,6 +32,23 @@ char* makeBcc(const char* data_field) {
 
   return Bcc;
 }
+
+void makeSET(char* setarr){
+  setarr[0] = FLAG_RCV;
+  setarr[1] = A_SND;
+  setarr[2] = C_SND;
+  setarr[3] = BCC_SND;
+  setarr[4] = FLAG_RCV;
+}
+
+void makeUA(char* uaarr) {
+  uaarr[0] = FLAG_RCV;
+  uaarr[1] = A_RCV;
+  uaarr[2] = C_RCV;
+  uaarr[3] = BCC_RCV;
+  uaarr[4] = FLAG_RCV;
+}
+
 
 void makePacket(const char* header, const char* data_field){
   strcat(packet,header);

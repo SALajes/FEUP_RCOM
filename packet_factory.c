@@ -108,6 +108,5 @@ void makePacket(const char* header, const char* data_field, size_t size) {
 
   llink.frame_size = res;
   memcpy(llink.frame,packet,res);
-
 }
 

@@ -7,7 +7,7 @@
 extern appLayer app;
 extern linkLayer llink;
 
-int stuffing(const char* array,size_t size, char* aux_array) {
+int stuffing(const unsigned char* array,size_t size, char* aux_array) {
   unsigned int i, j;
   for (i = 0, j = 0; i < size; i++, j++) {
     switch (array[i]) {
@@ -28,7 +28,7 @@ int stuffing(const char* array,size_t size, char* aux_array) {
   return j;
 }
 
-int destuffing(const char* array, size_t size, char* aux_array) {
+int destuffing(const unsigned  char* array, size_t size, char* aux_array) {
   unsigned int i, j;
   for (i = 0, j = 0; i < size; i++, j++) {
     if(array[i] == ESC_OCT){
@@ -52,7 +52,7 @@ int destuffing(const char* array, size_t size, char* aux_array) {
   return j;
 }
 
-void makeUA(char* uaarr) {
+void makeUA(unsigned char* uaarr) {
   uaarr[0] = FLAG_RCV;
   uaarr[1] = A_RCV;
   uaarr[2] = C_RCV;
@@ -60,19 +60,38 @@ void makeUA(char* uaarr) {
   uaarr[4] = FLAG_RCV;
 }
 
-char* makeBcc(const char* data_field) {
-  char* Bcc = malloc(1);
+unsigned char* makeBcc(const unsigned char* data_field, int size) {
+  unsigned char* Bcc = malloc(1);
 
   Bcc[0] = data_field[0];
 
-  for (int i = 1; i < STRSIZE; i++) {
+  for (int i = 1; i < size; i++) {
     Bcc[0] = Bcc[0] ^ data_field[i];
   }
 
   return Bcc;
 }
 
-void makeSET(char* setarr) {
+int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc){
+  if(data_field == NULL){
+    return false;
+  }
+
+  unsigned char new_bcc;
+
+  new_bcc = data_field[0];
+
+  for (size_t i = 1; i < size; i++)
+  {
+    new_bcc = new_bcc ^ data_field[i];
+  }
+
+
+  return new_bcc == bcc;
+
+}
+
+void makeSET(unsigned char* setarr) {
   if(setarr == NULL) return;
   setarr[0] = FLAG_RCV;
   setarr[1] = A_SND;
@@ -81,7 +100,7 @@ void makeSET(char* setarr) {
   setarr[4] = FLAG_RCV;
 }
 
-void makeREJ(char* REJarr,int s) {
+void makeREJ(unsigned char* REJarr, int s) {
   if (REJarr == NULL) return;
   REJarr[0] = FLAG_RCV;
   REJarr[1] = A_RCV;
@@ -90,7 +109,7 @@ void makeREJ(char* REJarr,int s) {
   REJarr[4] = FLAG_RCV;
 }
 
-void makeRR(char* RRarr, int s){
+void makeRR(unsigned char* RRarr, int s) { 
   if(RRarr == NULL) return;
   RRarr[0] = FLAG_RCV;
   RRarr[1] = A_RCV;
@@ -99,7 +118,7 @@ void makeRR(char* RRarr, int s){
   RRarr[4] = FLAG_RCV;
 }
 
-void makePacket(const char* data_field, size_t size, int s) {
+void makePacket(const unsigned char* data_field, size_t size, int s) {
   char packet[size * 3];
   char* aux_array = malloc(size * 2); 
   int res = 0;
@@ -107,13 +126,13 @@ void makePacket(const char* data_field, size_t size, int s) {
 
   bzero(packet,size*3);
 
-  //Header
+  //Header 
   packet[0] = FLAG_OCT;
   packet[1] = A_SND;
   packet[2] = (s) ? C_I1 : C_I0;
   packet[3] = A_SND ^ packet[2];
 
-  res += 3;
+  res += 4;
 
   // Data field
   stf_size = stuffing(data_field, size, aux_array);
@@ -121,7 +140,7 @@ void makePacket(const char* data_field, size_t size, int s) {
   res += stf_size;
 
   // Bcc for data
-  memcpy(packet + res, makeBcc(data_field),1);
+  memcpy(packet + res, makeBcc(data_field,size),1);
   res++;
 
   char flag[1] = {FLAG_OCT};

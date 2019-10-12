@@ -23,7 +23,7 @@ linkLayer llink;
 int main(int argc, char** argv) {
   char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
                           0x7E};  // THIS IS THE CORRECT MESSAGE
-  char field_data[256] = "amizade na faculdade de Engenharia";
+  char field_data[256];
   int c;
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
@@ -36,16 +36,18 @@ int main(int argc, char** argv) {
   }
 
   llink.baudRate = BAUDRATE;
-  llink.timeout = 5;
+  llink.timeout = 2;
   llink.numTransmissions = 3;
   llopen(0, RECEIVER);
+  c  = llread(app.fileDescriptor,field_data);
+  puts(field_data);
+  printf("%d\n",c);
 
   sleep(1);
 
   if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
     perror("tcsetattr");
-    exit(-1);
-  }
+    exit(-1);  }
 
   close(app.fileDescriptor);
   return 0;

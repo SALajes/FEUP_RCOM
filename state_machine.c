@@ -16,7 +16,7 @@ void advance_state_UA(char byte, states* state) {
   } else if (*state == A_OK) {
     if (byte == C_RCV) {
       *state = C_OK;
-    } else if (*state == FLAG_RCV) {
+    } else if (byte == FLAG_RCV) {
       *state = FLAG_OK;
     } else {
       *state = START;
@@ -62,7 +62,7 @@ void advance_state_SET(char byte, states* state) {
   } else if (*state == C_OK) {
     if (byte == BCC_SND) {
       *state = BCC_OK;
-    } else if (*state == FLAG_RCV) {
+    } else if (byte== FLAG_RCV) {
       *state = FLAG_OK;
     } else {
       *state = START;
@@ -83,8 +83,8 @@ void advance_state_I(char byte, states* state) {
       *state = FLAG_OK;
     }
   } else if (*state == FLAG_OK) {
-    if (byte == FLAG_RCV) {
-    } else if (byte == A_SND) {
+    if(byte == FLAG_RCV) return;
+    if (byte == A_SND) {
       *state = A_OK;
     } else {
       *state = START;
@@ -98,9 +98,9 @@ void advance_state_I(char byte, states* state) {
       *state = START;
     }
   } else if (*state == C_OK) {
-    if (byte == BCC_SND) {
+    if (byte == (A_SND ^ C_I0) || byte == (A_SND ^ C_I1)) {
       *state = BCC_OK;
-    } else if (*state == FLAG_RCV) {
+    } else if (byte == FLAG_RCV) {
       *state = FLAG_OK;
     } else {
       *state = START;
@@ -127,7 +127,7 @@ void advance_state_RR(unsigned char byte, states* state) {
     }
   } else if (*state == FLAG_OK) {
     if (byte == FLAG_RCV) {
-    } else if (byte == A_SND) {
+    } else if (byte == A_RCV) {
       *state = A_OK;
     } else {
       *state = START;
@@ -141,7 +141,8 @@ void advance_state_RR(unsigned char byte, states* state) {
       *state = START;
     }
   } else if (*state == C_OK) {
-    if (byte == BCC_SND) {
+    if (byte == (A_RCV ^ C_RR0) || byte == ( A_RCV ^ C_RR1) ||
+        byte == (A_RCV ^ C_REJ0) || byte == (A_RCV ^ C_REJ1)) {
       *state = BCC_OK;
     } else if (*state == FLAG_RCV) {
       *state = FLAG_OK;

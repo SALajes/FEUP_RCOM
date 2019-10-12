@@ -10,13 +10,13 @@ all: clean sender receiver
 
 sender:
 			@echo "Building sender..."
-			$(CC) sender.c $(dep) -o sender.o
+			$(CC) sender.c $(dep) -o sender
 
 receiver: 
 			@echo "Building receiver..."
-			$(CC) receiver.c $(dep) -o receiver.o
+			$(CC) receiver.c $(dep) -o receiver
 
 
 clean:
 				@echo "Cleaning up..."
-				rm -rvf *.o ${BINS}
+				rm -rf *.o ${BINS}

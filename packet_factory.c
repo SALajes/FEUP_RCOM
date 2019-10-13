@@ -105,7 +105,7 @@ void makeREJ(unsigned char* REJarr, int s) {
   REJarr[0] = FLAG_RCV;
   REJarr[1] = A_RCV;
   REJarr[2] = (s) ? C_REJ1 : C_REJ0;
-  REJarr[3] = BCC_RCV;
+  REJarr[3] = A_RCV ^ REJarr[2];
   REJarr[4] = FLAG_RCV;
 }
 
@@ -140,6 +140,7 @@ void makePacket(const unsigned char* data_field, size_t size, int s) {
   res += stf_size;
 
   // Bcc for data
+  // packet[res] = 0; // use this to put bcc2 with error
   memcpy(packet + res, makeBcc(data_field,size),1);
   res++;
 

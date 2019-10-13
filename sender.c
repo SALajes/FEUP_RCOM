@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
   char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
                           0x7E};  // THIS IS THE CORRECT MESSAGE
   char field_data[35] = "amizade na faculdade de Engenharia";
+  char field_data2[18] = "ola sou a vanessa";
   int c;
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
@@ -44,6 +45,8 @@ int main(int argc, char** argv) {
   llink.numTransmissions = 3;
   llopen(0,TRANSMITTER);
   llwrite(app.fileDescriptor,field_data,35);
+  llwrite(app.fileDescriptor,field_data2,18);
+  
 
   sleep(1);
 

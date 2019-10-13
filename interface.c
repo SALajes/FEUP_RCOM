@@ -233,25 +233,27 @@ void llopenT(int fd) {
 }
 
 int llwrite(int fd, char* buffer, int length) {
-  unsigned char I[255], header[5], buf[255],bcc;
-  int res;
-  states state = START;
   if (length <= 0) {
     perror("length 0 or less");
     return -1;
   }
   makePacket(buffer, length, llink.sequenceNumber);
 
-  // Send I packet
-  res = write(fd, llink.frame, llink.frame_size);
+  counter = 0;
 
   while (1) {
+    unsigned char I[255], header[5], buf[255], bcc;
+    int res;
+    states state = START;
     if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
     size_t i;
     control_t Spacket;
+
+    // Send I packet
+    res = write(fd, llink.frame, llink.frame_size);
 
     printf("STATE: %d\n", state);
 
@@ -266,7 +268,7 @@ int llwrite(int fd, char* buffer, int length) {
     // alarm(0);
 
     bcc = buf[3];
-    printf("%#x %#x\n", bcc, buf[2] ^ buf[1]);
+    printf("%#x %#x\n", bcc, (buf[2] ^ buf[1]));
 
     // Check BCC
     if (buf[3] != (buf[2] ^ buf[1])) {
@@ -285,6 +287,7 @@ int llwrite(int fd, char* buffer, int length) {
         break;
       case REJ:
         res = write(fd, llink.frame, llink.frame_size);
+        printf("ola %d\n",counter);
         counter++;
         continue;
       default:
@@ -292,61 +295,71 @@ int llwrite(int fd, char* buffer, int length) {
         break;
     }
 
-    printf("ola\n");
-    break;
+    llink.sequenceNumber = !llink.sequenceNumber;
+    return res;
   }
 
-  llink.sequenceNumber = !llink.sequenceNumber;
-  return res;
+  
 }
 
 int llread(int fd, char* buffer) {
-  unsigned char data_packet[255], header[5], buf[255];
-  int res, bcc_correct;
-  states state = START;
+  counter = 0;
 
-  unsigned char bcc2;
-  size_t i;
-  size_t packet_size = 0;
-
-  // Read packet
-  for (i = 0; state != STOP; i++) {
-    res = read(fd, &buf[i], 1);
-    printf("BYTE: %#x\n", buf[i]);
-    advance_state_I(buf[i], &state);
-    if (state == DATA_R) {
-      data_packet[packet_size] = buf[i];
-      packet_size++;
+  while (1) {
+    if (counter == llink.numTransmissions) {
+      perror("Exceeded max number of tries. Exiting");
+      exit(-1);
     }
-    printf("STATE: %d\n", state);
+    unsigned char data_packet[255], header[5], buf[255];
+    int res, bcc_correct;
+    states state = START;
+    unsigned char bcc2;
+    size_t i;
+    size_t packet_size = 0;
+
+    // Read packet
+
+    for (i = 0; state != STOP; i++) {
+      res = read(fd, &buf[i], 1);
+      printf("BYTE: %#x\n", buf[i]);
+      advance_state_I(buf[i], &state);
+      if (state == DATA_R) {
+        data_packet[packet_size] = buf[i];
+        packet_size++;
+      }
+      printf("STATE: %d\n", state);
+    }
+
+    bcc2 = data_packet[packet_size - 1];
+
+    printf("%#x\n", bcc2);
+
+    bcc_correct = checkBcc2(data_packet, packet_size - 1, bcc2);
+
+    // Checks if bcc2 is correct
+    if (bcc_correct) {
+      // send RR
+      makeRR(header, !llink.sequenceNumber);
+      printf("RR%d\n", !llink.sequenceNumber);
+    } else {
+      // send REJ
+      makeREJ(header, !llink.sequenceNumber);
+      printf("REJ%d %d\n", !llink.sequenceNumber, counter);
+      res = write(fd, header, 5);
+      counter++;
+      continue;
+    }
+
+    destuffing(data_packet, packet_size - 1, buffer);
+    puts(data_packet);
+
+    res = write(fd, header, 5);
+
+    if (!bcc_correct) {
+      memcpy(buffer, buf, packet_size);
+    }
+
+    llink.sequenceNumber = !llink.sequenceNumber;
+    return (bcc_correct) ? packet_size : -1;
   }
-
-  bcc2 = data_packet[packet_size - 1];
-
-  printf("%#x\n",bcc2);
-
-  bcc_correct = checkBcc2(data_packet, packet_size - 1 , bcc2);
-
-      // Checks if bcc2 is correct
-  if (bcc_correct) {
-    // send RR
-    makeRR(header, !llink.sequenceNumber);
-    printf("RR%d\n", !llink.sequenceNumber);
-  }
-  else {
-    // send REJ
-    makeREJ(header, !llink.sequenceNumber);
-    printf("REJ%d\n", !llink.sequenceNumber);
-  }
-
-  destuffing(data_packet,packet_size-1,buffer);
-  puts(data_packet);
-
-  res = write(fd, header, 5);
-
-  if(!bcc_correct){
-    memcpy(buffer,buf,packet_size);
-  }
-
-  return (bcc_correct) ? packet_size : -1;
 }

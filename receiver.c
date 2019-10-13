@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
   char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
                           0x7E};  // THIS IS THE CORRECT MESSAGE
   char field_data[256];
+  char field_data2[256];
   int c;
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
@@ -40,7 +41,8 @@ int main(int argc, char** argv) {
   llink.numTransmissions = 3;
   llopen(0, RECEIVER);
   c  = llread(app.fileDescriptor,field_data);
-  puts(field_data);
+  c  = llread(app.fileDescriptor,field_data2);
+  // puts(field_data);
   printf("%d\n",c);
 
   sleep(1);

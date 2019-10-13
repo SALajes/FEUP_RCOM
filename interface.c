@@ -44,13 +44,13 @@ char* getPort(int port) {
   char* path = malloc(10);
   switch (port) {
     case 0:
-      strcat(path, COM_1);
+      strcat(path, "/dev/ttyS0");
       break;
     case 1:
-      strcat(path, COM_2);
+      strcat(path, "/dev/ttyS1");
       break;
     case 2:
-      strcat(path, COM_3);
+      strcat(path, "/dev/ttyS2");
       break;
 
     default:

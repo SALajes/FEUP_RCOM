@@ -33,9 +33,14 @@ int main(int argc, char** argv) {
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
 
-  if ((argc < 2) ||
-      ((strcmp(COM_1, argv[1]) != 0) && (strcmp(COM_2, argv[1]) != 0) &&
-       (strcmp(COM_3, argv[1]) != 0))) {
+  // if ((argc < 2) ||
+  //     ((strcmp(COM_1, argv[1]) != 0) && (strcmp(COM_2, argv[1]) != 0) &&
+  //      (strcmp(COM_3, argv[1]) != 0))) {
+  //   printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
+  //   exit(1);
+  // }
+
+  if ((argc < 2) || (atoi(argv[1]) < 0 || atoi(argv[1]) > 2)) {
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
     exit(1);
   }
@@ -43,7 +48,7 @@ int main(int argc, char** argv) {
   llink.baudRate = BAUDRATE;
   llink.timeout = 2;
   llink.numTransmissions = 3;
-  llopen(0,TRANSMITTER);
+  llopen(atoi(argv[1]),TRANSMITTER);
   llwrite(app.fileDescriptor,field_data,35);
   llwrite(app.fileDescriptor,field_data2,18);
   

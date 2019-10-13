@@ -13,8 +13,8 @@
 #define C_SND 0x03
 #define C_DISC 0x0B
 #define C_RCV 0x07
-#define C_RR1  0x05
-#define C_RR0  0x85
+#define C_RR0  0x05
+#define C_RR1  0x85
 #define C_REJ0 0x01
 #define C_REJ1 0x81
 #define C_I0  0x00

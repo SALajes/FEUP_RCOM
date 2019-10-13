@@ -286,8 +286,7 @@ int llwrite(int fd, char* buffer, int length) {
         }
         break;
       case REJ:
-        res = write(fd, llink.frame, llink.frame_size);
-        printf("ola %d\n",counter);
+        // res = write(fd, llink.frame, llink.frame_size);
         counter++;
         continue;
       default:

@@ -8,17 +8,17 @@
 
 #define STRSIZE 5
 #define FLAG_RCV 0x7E
-#define A_SND 0x03
-#define A_RCV 0x01
-#define C_SND 0x03
-#define C_DISC 0x0B
-#define C_RCV 0x07
-#define C_RR0  0x05
-#define C_RR1  0x85
-#define C_REJ0 0x01
-#define C_REJ1 0x81
-#define C_I0  0x00
-#define C_I1  0x40
+#define A_SND    0x03
+#define A_RCV    0x01
+#define C_SND    0x03
+#define C_DISC   0x0B
+#define C_RCV    0x07
+#define C_RR0    0x05
+#define C_RR1    0x85
+#define C_REJ0   0x01
+#define C_REJ1   0x81
+#define C_I0     0x00
+#define C_I1     0x40
 #define BCC_SND (A_SND ^ C_SND)
 #define BCC_RCV (A_RCV ^ C_RCV)
 
@@ -40,11 +40,6 @@ typedef enum
     DATA_R,
     STOP 
 } states;
-
-typedef struct  {
-  int fileDescriptor; /*Descritor correspondente à porta série*/
-  int status;         /*TRANSMITTER | RECEIVER*/
-} appLayer;
 
 typedef struct  {
   char port[20];                  /*Dispositivo /dev/ttySx, x = 0, 1*/

@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include "llmacros.h"
 #include "interface.h"
-
+#include "applicationLayer.h"
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"

@@ -21,12 +21,7 @@
 appLayer app;
 linkLayer llink;
 
-
-
-
 int main(int argc, char** argv) {
-  char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
-                          0x7E};  // THIS IS THE CORRECT MESSAGE
   char field_data[35] = "amizade na faculdade de Engenharia";
   char field_data2[18] = "ola sou a vanessa";
   int c;

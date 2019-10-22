@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "interface.h"
 #include "llmacros.h"
+#include "applicationLayer.h"
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
@@ -21,8 +22,6 @@ appLayer app;
 linkLayer llink;
 
 int main(int argc, char** argv) {
-  char header[STRSIZE] = {0x7E, 0x03, 0x03, 0x00,
-                          0x7E};  // THIS IS THE CORRECT MESSAGE
   char field_data[256];
   char field_data2[256];
   int c;

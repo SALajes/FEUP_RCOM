@@ -11,6 +11,6 @@ void makeUA (unsigned char* uaarr);
 void makeREJ(unsigned char* REJarr, int s);
 void makeRR (unsigned char* RRarr, int s);
 int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc);
-control_t what_Spacket(unsigned char* packet);
+control_t make_Spacket(unsigned char* packet);
 
 #endif

@@ -5,6 +5,8 @@
 #include <string.h>
 #include "llmacros.h"
 
+#define BYTE_LEN 1
+
 extern appLayer app;
 extern linkLayer llink;
 
@@ -119,18 +121,20 @@ void makeRR(unsigned char* RRarr, int s) {
   RRarr[4] = FLAG_RCV;
 }
 
-void makePacket(const unsigned char* data_field, size_t size, int s) {
+/** Change name from packet to frame */
+void makePacket(const unsigned char* data_field, size_t size, int sequence_number) {
   char packet[size * 3];
   char* aux_array = malloc(size * 2); 
   int res = 0;
   int stf_size;
+  char* bcc2_aux = malloc(2); 
 
   bzero(packet,size*3);
 
   //Header 
   packet[0] = FLAG_OCT;
   packet[1] = A_SND;
-  packet[2] = (s) ? C_I1 : C_I0;
+  packet[2] = (sequence_number) ? C_I1 : C_I0;
   packet[3] = A_SND ^ packet[2];
 
   res += 4;
@@ -142,19 +146,21 @@ void makePacket(const unsigned char* data_field, size_t size, int s) {
 
   // Bcc for data
   // packet[res] = 0; // use this to put bcc2 with error
-  memcpy(packet + res, makeBcc(data_field,size),1);
-  res++;
+  bcc2_aux[0] = makeBcc(data_field, size);
+  stf_size = stuffing(bcc2_aux, 1, aux_array);
+  memcpy(packet + res, bcc2_aux, stf_size);
+  res += stf_size;
 
-  char flag[1] = {FLAG_OCT};
-  memcpy(packet + res , flag, 1);
+  char flag[BYTE_LEN] = {FLAG_OCT};
+  memcpy(packet + res , flag, BYTE_LEN);
   res++;
 
   llink.frame_size = res;
-  memcpy(llink.frame,packet,res);
+  memcpy(llink.frame, packet,res);
 }
 
-control_t what_Spacket(unsigned char* packet) {
-  unsigned char c = packet[2];
+control_t make_Spacket(unsigned char* packet) {
+  unsigned char c = packet[2]; //analise control byte
   if (c == C_SND)
     return SET;
   if (c == C_DISC)

@@ -6,7 +6,7 @@
 #define COM_2 "/dev/ttyS2"
 #define COM_3 "/dev/ttyS3"
 
-#define STRSIZE 5
+#define STRSIZE 4
 #define FLAG_RCV 0x7E
 #define A_SND    0x03
 #define A_RCV    0x01

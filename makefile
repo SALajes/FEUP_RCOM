@@ -9,14 +9,14 @@ dep := packet_factory.c state_machine.c interface.c
 all: clean sender receiver
 
 sender:
-			@echo "Building sender..."
-			$(CC) sender.c $(dep) -o sender
+	@echo "Building sender..."
+	$(CC) sender.c $(dep) -o sender
 
 receiver: 
-			@echo "Building receiver..."
-			$(CC) receiver.c $(dep) -o receiver
+	@echo "Building receiver..."
+	$(CC) receiver.c $(dep) -o receiver
 
 
 clean:
-				@echo "Cleaning up..."
-				rm -rf *.o ${BINS}
+	@echo "Cleaning up..."
+	rm -rf *.o ${BINS}

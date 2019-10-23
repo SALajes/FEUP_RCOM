@@ -1,4 +1,11 @@
+void alarm_handler();
+char *getPort(int port);
+int setTermios(int fd);
 int llopen(int port, int flag);
-int llwrite(int fd, char* buffer, int length);
-int llread(int fd, char* buffer);
-int llclose(int fd);
+void llopenRCVCV(int fd);
+void llopenSND(int fd);
+int llwrite(int fd, char *buffer, int length);
+int llread(int fd, char *buffer);
+int llcloseSND(int fd);
+int receivedDISCframeRCV();
+int llcloseRCV(int fd);

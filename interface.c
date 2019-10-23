@@ -17,8 +17,8 @@ extern appLayer app;
 extern linkLayer llink;
 int counter = 0;
 
-void llopenT(int fd);
-void llopenR(int fd);
+void llopenSND(int fd);
+void llopenRCV(int fd);
 
 void alarm_handler()
 {
@@ -150,13 +150,12 @@ int llopen(int port, int flag)
   switch (flag)
   {
   case TRANSMITTER:
-    llopenT(fd);
+    llopenSND(fd);
     break;
   case RECEIVER:
-    llopenR(fd);
+    llopenRCV(fd);
     break;
   default:
-
     break;
   }
 
@@ -336,7 +335,7 @@ int llwrite(int fd, char *buffer, int length)
 /*
 no llread vai ser necessario adicionar uma parte à maquina de estados, para caso C seja C_DISC, verifica, a BCC e se a seguir vem a flag, e neste caso chama a funçao receivedDISCframeRCV
 */
-int llread(int fd, char *buffer) 
+int llread(int fd, char *buffer)
 {
   counter = 0;
 
@@ -397,7 +396,8 @@ int llread(int fd, char *buffer)
   }
 }
 
-int llcloseSND(int fd){
+int llcloseSND(int fd)
+{
   //fd identificador da ligação de dados
 
   /*TODO
@@ -437,7 +437,8 @@ int llcloseSND(int fd){
   //retorna positivo em caso de sucesso (+1)
 }
 
-int receivedDISCframeRCV(){//PASSA PARA AQUI SE DURANTE LLREAD RECEBER A TRAMA DISC ENVIADA PELO SENDER
+int receivedDISCframeRCV()
+{ //PASSA PARA AQUI SE DURANTE LLREAD RECEBER A TRAMA DISC ENVIADA PELO SENDER
   /* TODO
   criar ciclo
 
@@ -463,13 +464,13 @@ int receivedDISCframeRCV(){//PASSA PARA AQUI SE DURANTE LLREAD RECEBER A TRAMA D
 
   se nao conseguir ler antes do alarme tocar tenta de novo e se atingir um maximo de tentativas volta para o llread
 */
-
 }
 
-int llcloseRCV(int fd){ //SÓ É CHAMADO APÓS RECEBER A TRAMA UA DO SENDER
+int llcloseRCV(int fd)
+{ //SÓ É CHAMADO APÓS RECEBER A TRAMA UA DO SENDER
 
   //fd identificador da ligação de dados
-  
+
   //FECHA com segurança o descritor
 
   //retorna positivo em caso de sucesso

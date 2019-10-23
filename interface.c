@@ -163,7 +163,7 @@ int llopen(int port, int flag)
   return fd;
 }
 
-void llopenR(int fd)
+void llopenRCV(int fd)
 {
   unsigned char uaArr[5];
   unsigned char buf[255];
@@ -194,7 +194,7 @@ void llopenR(int fd)
     }
     // alarm(0);
 
-    if ((buf[1] ^ buf[2]) != buf[3] && buf[3] != BCC_SND) // Verifies if the sender's BCC is not valid
+    if ((buf[1] ^ buf[2]) != buf[3] && buf[3] != A_SND ^ C_SET) // Verifies if the sender's BCC is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -209,7 +209,7 @@ void llopenR(int fd)
   res = write(fd, uaArr, 5);
 }
 
-void llopenT(int fd)
+void llopenSND(int fd)
 {
   unsigned char setArr[5];
   unsigned char buf[255];
@@ -245,7 +245,7 @@ void llopenT(int fd)
     }
     alarm(0);
 
-    if ((buf[1] ^ buf[2]) != BCC_RCV) //verifies if receiver's Bcc is not valid
+    if ((buf[1] ^ buf[2]) != A_RCV ^ C_UA) //verifies if receiver's Bcc is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -333,7 +333,10 @@ int llwrite(int fd, char *buffer, int length)
   }
 }
 
-int llread(int fd, char *buffer)
+/*
+no llread vai ser necessario adicionar uma parte à maquina de estados, para caso C seja C_DISC, verifica, a BCC e se a seguir vem a flag, e neste caso chama a funçao receivedDISCframeRCV
+*/
+int llread(int fd, char *buffer) 
 {
   counter = 0;
 
@@ -392,4 +395,82 @@ int llread(int fd, char *buffer)
     llink.sequenceNumber = !llink.sequenceNumber;
     return (bcc_correct) ? packet_size : -1;
   }
+}
+
+int llcloseSND(int fd){
+  //fd identificador da ligação de dados
+
+  /*TODO
+  criar ciclo
+
+  criar trama I relativa a DISC do sender = [
+    FLAG,
+    A_SND,
+    C_DISC,
+    A_SND ^ C_DISC,
+    FLAG
+  ] 
+  write desta trama
+
+  iniciar alarme
+
+  tentar ler  resposta do receiver: 
+    esta resposta é um DISC do receiver = [
+          FLAG,
+          A_RCV,
+          C_DISC,
+          A_RCV ^ C_DISC,
+          FLAG
+        ]
+
+  se conseguir ler esta mensagem envia como resposta um UA =[
+          FLAG,
+          A_SND,
+          C_UA,
+          A_SND ^ C_UA
+          FLAG
+        ] e termina com valor positivo (+1)
+
+    se nao conseguir ler antes do alarme tocar tenta de novo e se atingir um maximo de tentativas, fecha o descritor e retorna -1
+  */
+
+  //retorna positivo em caso de sucesso (+1)
+}
+
+int receivedDISCframeRCV(){//PASSA PARA AQUI SE DURANTE LLREAD RECEBER A TRAMA DISC ENVIADA PELO SENDER
+  /* TODO
+  criar ciclo
+
+  cria uma trama DISC do receiver = [
+          FLAG,
+          A_RCV,
+          C_DISC,
+          A_RCV ^ C_DISC,
+          FLAG
+        ]
+  write esta trama para o sender
+
+  iniciar alarme
+
+  tenta ler a trama UA do sender =[
+          FLAG,
+          A_SND,
+          C_UA,
+          A_SND ^ C_UA
+          FLAG
+        ] 
+  se conseguir ler esta trama chama o llcloseRCV para terminar
+
+  se nao conseguir ler antes do alarme tocar tenta de novo e se atingir um maximo de tentativas volta para o llread
+*/
+
+}
+
+int llcloseRCV(int fd){ //SÓ É CHAMADO APÓS RECEBER A TRAMA UA DO SENDER
+
+  //fd identificador da ligação de dados
+  
+  //FECHA com segurança o descritor
+
+  //retorna positivo em caso de sucesso
 }

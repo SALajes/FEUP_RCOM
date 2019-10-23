@@ -14,7 +14,7 @@ int stuffing(const unsigned char* array,size_t size, char* aux_array) {
   unsigned int i, j;
   for (i = 0, j = 0; i < size; i++, j++) {
     switch (array[i]) {
-      case FLAG_RCV:
+      case FLAG:
         aux_array[j] = ESC_OCT;
         aux_array[j + 1] = FLAG_STF;
         j++;
@@ -56,11 +56,11 @@ int destuffing(const unsigned  char* array, size_t size, char* aux_array) {
 }
 
 void makeUA(unsigned char* uaarr) {
-  uaarr[0] = FLAG_RCV;
+  uaarr[0] = FLAG;
   uaarr[1] = A_RCV;
-  uaarr[2] = C_RCV;
-  uaarr[3] = BCC_RCV;
-  uaarr[4] = FLAG_RCV;
+  uaarr[2] = C_UA;
+  uaarr[3] = A_RCV^C_UA;
+  uaarr[4] = FLAG;
 }
 
 unsigned char* makeBcc(const unsigned char* data_field, int size) {
@@ -96,29 +96,29 @@ int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc){
 
 void makeSET(unsigned char* setarr) {
   if(setarr == NULL) return;
-  setarr[0] = FLAG_RCV;
+  setarr[0] = FLAG;
   setarr[1] = A_SND;
-  setarr[2] = C_SND;
-  setarr[3] = BCC_SND;
-  setarr[4] = FLAG_RCV;
+  setarr[2] = C_SET;
+  setarr[3] = A_SND ^C_SET;
+  setarr[4] = FLAG;
 }
 
 void makeREJ(unsigned char* REJarr, int s) {
   if (REJarr == NULL) return;
-  REJarr[0] = FLAG_RCV;
+  REJarr[0] = FLAG;
   REJarr[1] = A_RCV;
   REJarr[2] = (s) ? C_REJ1 : C_REJ0;
   REJarr[3] = A_RCV ^ REJarr[2];
-  REJarr[4] = FLAG_RCV;
+  REJarr[4] = FLAG;
 }
 
 void makeRR(unsigned char* RRarr, int s) { 
   if(RRarr == NULL) return;
-  RRarr[0] = FLAG_RCV;
+  RRarr[0] = FLAG;
   RRarr[1] = A_RCV;
   RRarr[2] = (s) ? C_RR1 : C_RR0;
   RRarr[3] = A_RCV ^ RRarr[2];
-  RRarr[4] = FLAG_RCV;
+  RRarr[4] = FLAG;
 }
 
 /** Change name from packet to frame */
@@ -161,11 +161,11 @@ void makePacket(const unsigned char* data_field, size_t size, int sequence_numbe
 
 control_t make_Spacket(unsigned char* packet) {
   unsigned char c = packet[2]; //analise control byte
-  if (c == C_SND)
+  if (c == C_SET)
     return SET;
   if (c == C_DISC)
     return DISC;
-  if (c == C_RCV)
+  if (c == C_UA)
     return UA;
   if (c == C_RR0 || c == C_RR1)
     return RR;

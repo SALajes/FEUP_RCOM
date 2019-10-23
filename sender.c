@@ -38,11 +38,14 @@ int main(int argc, char **argv)
   llink.baudRate = BAUDRATE;
   llink.timeout = 2;
   llink.numTransmissions = 3;
+
   llopen(atoi(argv[1]), TRANSMITTER);
   llwrite(app.fileDescriptor, field_data, 35);
   llwrite(app.fileDescriptor, field_data2, 18);
 
   sleep(1);
+
+  llclose(app.fileDescriptor, TRANSMITTER);
 
   if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
   {

@@ -21,7 +21,8 @@
 appLayer app;
 linkLayer llink;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
   char field_data[256];
   char field_data2[256];
   int c;
@@ -35,7 +36,8 @@ int main(int argc, char** argv) {
   //   exit(1);
   // }
 
-  if ((argc < 2) || (atoi(argv[1]) < 0 || atoi(argv[1]) > 2)) {
+  if ((argc < 2) || (atoi(argv[1]) < 0 || atoi(argv[1]) > 2))
+  {
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
     exit(1);
   }
@@ -44,16 +46,21 @@ int main(int argc, char** argv) {
   llink.timeout = 2;
   llink.numTransmissions = 3;
   llopen(atoi(argv[1]), RECEIVER);
-  c  = llread(app.fileDescriptor,field_data);
-  c  = llread(app.fileDescriptor,field_data2);
+
+  c = llread(app.fileDescriptor, field_data);
+  c = llread(app.fileDescriptor, field_data2);
   // puts(field_data);
-  printf("%d\n",c);
+  // printf("%d\n", c);
 
   sleep(1);
 
-  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
+  llclose(app.fileDescriptor, RECEIVER);
+
+  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
+  {
     perror("tcsetattr");
-    exit(-1);  }
+    exit(-1);
+  }
 
   close(app.fileDescriptor);
   return 0;

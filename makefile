@@ -16,7 +16,12 @@ receiver:
 	@echo "Building receiver..."
 	$(CC) receiver.c $(dep) -o receiver
 
+debug:
+	@echo "Building sender and receiver with extra debugger information..."
+	$(CC) sender.c $(dep) -o sender -g
+	$(CC) receiver.c $(dep) -o receiver -g
+
 
 clean:
 	@echo "Cleaning up..."
-	rm -rf *.o ${BINS}
+	rm -rf *.o ${BINS} 

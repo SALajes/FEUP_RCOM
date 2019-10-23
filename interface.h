@@ -6,6 +6,6 @@ void llopenRCVCV(int fd);
 void llopenSND(int fd);
 int llwrite(int fd, char *buffer, int length);
 int llread(int fd, char *buffer);
-int llcloseSND(int fd);
+int llcloseSND(int fd, int flag);
 int receivedDISCframeRCV();
-int llcloseRCV(int fd);
+int llcloseRCV(int fd, int flag);

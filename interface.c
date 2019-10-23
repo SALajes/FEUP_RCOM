@@ -110,7 +110,7 @@ int setTermios(int fd)
 
 int llopen(int port, int flag)
 {
-  int fd;
+  int fd; // serial port file
   char *path;
 
   if (flag != TRANSMITTER && flag != RECEIVER)
@@ -181,19 +181,19 @@ void llopenRCV(int fd)
       exit(-1);
     }
 
-    printf("STATE: %d\n", state);
+    // printf("STATE: %d\n", state);
 
     // alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++)
     {
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_SET(buf[i], &state);
-      printf("STATE: %d\n", state);
+      // printf("STATE: %d\n", state);
     }
-    // alarm(0);
+    alarm(0);
 
-    if ((buf[1] ^ buf[2]) != buf[3] && buf[3] != A_SND ^ C_SET) // Verifies if the sender's BCC is not valid
+    if (((buf[1] ^ buf[2]) != buf[3]) && (buf[3] != A_SND ^ C_SET)) // Verifies if the sender's BCC is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -231,20 +231,20 @@ void llopenSND(int fd)
     // Send SET
     res = write(fd, setArr, 5);
 
-    printf("STATE: %d\n", state);
+    // printf("STATE: %d\n", state);
 
     // Receive UA
     alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++)
     {
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_UA(buf[i], &state);
-      printf("STATE: %d\n", state);
+      // printf("STATE: %d\n", state);
     }
     alarm(0);
 
-    if ((buf[1] ^ buf[2]) != A_RCV ^ C_UA) //verifies if receiver's Bcc is not valid
+    if (((buf[1] ^ buf[2]) != buf[3]) && (buf[3] != A_RCV ^ C_UA)) //verifies if receiver's Bcc is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -285,16 +285,16 @@ int llwrite(int fd, char *buffer, int length)
     // Send I packet
     res = write(fd, llink.frame, llink.frame_size);
 
-    printf("STATE: %d\n", state);
+    // printf("STATE: %d\n", state);
 
     // Receive RR or REJ
     // alarm(llink.timeout);
     for (i = 0; state != STOP; i++)
     {
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_RR(buf[i], &state);
-      printf("STATE: %d\n", state);
+      // printf("STATE: %d\n", state);
     }
     // alarm(0);
 
@@ -307,7 +307,7 @@ int llwrite(int fd, char *buffer, int length)
       continue;
     }
 
-    Spacket = make_Spacket(buf);
+    Spacket = getPacketType(buf);
 
     switch (Spacket)
     {
@@ -322,6 +322,9 @@ int llwrite(int fd, char *buffer, int length)
       // res = write(fd, llink.frame, llink.frame_size);
       counter++;
       continue;
+    case DISC:
+      llclose(fd, RECEIVER);
+      break;
     default:
       return -1;
       break;
@@ -358,14 +361,14 @@ int llread(int fd, char *buffer)
     for (i = 0; state != STOP; i++)
     {
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_I(buf[i], &state);
       if (state == DATA_R)
       {
         data_packet[packet_size] = buf[i];
         packet_size++;
       }
-      printf("STATE: %d\n", state);
+      // printf("STATE: %d\n", state);
     }
 
     destuffing(data_packet, packet_size - 1, buffer);
@@ -396,82 +399,142 @@ int llread(int fd, char *buffer)
   }
 }
 
-int llcloseSND(int fd)
+int llclose(int port, int flag)
+{
+  switch (flag)
+  {
+  case TRANSMITTER:
+    llcloseSND(port, flag);
+    break;
+  case RECEIVER:
+    llcloseRCV(port, flag);
+    break;
+  default:
+    break;
+  }
+
+  close(port);
+  tcsetattr(port, TCSANOW, &llink.oldPortSettings);
+
+  return 1;
+}
+
+int llcloseSND(int port, int flag)
 {
   //fd identificador da ligação de dados
 
-  /*TODO
-  criar ciclo
+  unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
+  unsigned char uaArray[5] = {FLAG, A_SND, C_UA, A_SND ^ C_UA, FLAG};
+  unsigned char buffer[256];
+  int res;
 
-  criar trama I relativa a DISC do sender = [
-    FLAG,
-    A_SND,
-    C_DISC,
-    A_SND ^ C_DISC,
-    FLAG
-  ] 
-  write desta trama
+  states disc_state = START;
 
-  iniciar alarme
+  memcpy(llink.frame, discArray, 5);
 
-  tentar ler  resposta do receiver: 
-    esta resposta é um DISC do receiver = [
-          FLAG,
-          A_RCV,
-          C_DISC,
-          A_RCV ^ C_DISC,
-          FLAG
-        ]
+  while (1)
+  {
+    if (counter == llink.numTransmissions)
+    {
+      perror("Exceeded max number of tries. Exiting");
+      exit(-1);
+    }
+    res = write(port, discArray, 5);
+    puts("Wrote");
+    alarm(llink.timeout);
 
-  se conseguir ler esta mensagem envia como resposta um UA =[
-          FLAG,
-          A_SND,
-          C_UA,
-          A_SND ^ C_UA
-          FLAG
-        ] e termina com valor positivo (+1)
+    for (unsigned int i = 0; disc_state != STOP; i++)
+    {
+      puts("Reading...");
+      res = read(port, &buffer[i], 1);
+      advance_state_DISC(buffer[i], &disc_state);
+    }
 
-    se nao conseguir ler antes do alarme tocar tenta de novo e se atingir um maximo de tentativas, fecha o descritor e retorna -1
-  */
+    puts("Read!");
+    alarm(0);
 
-  //retorna positivo em caso de sucesso (+1)
+    // if message is corrupted
+    if (buffer[1] ^ buffer[2] != A_RCV ^ C_DISC)
+    {
+      bzero(buffer, 5);
+      counter++;
+      continue;
+    }
+
+    counter = 0;
+    break;
+  }
+
+  write(port, uaArray, 5);
+
+  return 1;
 }
+// Closes RCV function before ending of times and we all pass RCOM
+int llcloseRCV(int port, int flag)
+{
 
-int receivedDISCframeRCV()
-{ //PASSA PARA AQUI SE DURANTE LLREAD RECEBER A TRAMA DISC ENVIADA PELO SENDER
-  /* TODO
-  criar ciclo
+  unsigned char buffer[256];
+  unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
 
-  cria uma trama DISC do receiver = [
-          FLAG,
-          A_RCV,
-          C_DISC,
-          A_RCV ^ C_DISC,
-          FLAG
-        ]
-  write esta trama para o sender
+  int res;
 
-  iniciar alarme
+  states disc_state = START, ua_state = START;
 
-  tenta ler a trama UA do sender =[
-          FLAG,
-          A_SND,
-          C_UA,
-          A_SND ^ C_UA
-          FLAG
-        ] 
-  se conseguir ler esta trama chama o llcloseRCV para terminar
+  while (1)
+  {
+    if (counter == llink.numTransmissions)
+    {
+      perror("Exceeded max number of tries. Exiting");
+      exit(-1);
+    }
 
-  se nao conseguir ler antes do alarme tocar tenta de novo e se atingir um maximo de tentativas volta para o llread
-*/
-}
+    for (unsigned int i = 0; disc_state != STOP; i++)
+    {
+      puts("Reading now...");
+      res = read(port, &buffer, 1);
+      printf("%X", buffer[i]);
+      advance_state_DISC(buffer[i], &disc_state);
+    }
+    if (buffer[1] ^ buffer[2] != A_SND ^ C_DISC)
+    {
+      bzero(buffer, 5);
+      counter++;
+      continue;
+    }
+    counter = 0;
+    break;
+  }
 
-int llcloseRCV(int fd)
-{ //SÓ É CHAMADO APÓS RECEBER A TRAMA UA DO SENDER
+  write(port, discArray, 5);
+  alarm(llink.timeout);
 
-  //fd identificador da ligação de dados
+  while (1)
+  {
+    if (counter == llink.numTransmissions)
+    {
+      perror("Exceeded max number of tries. Exiting");
+      exit(-1);
+    }
 
-  //FECHA com segurança o descritor
+    for (unsigned int i = 0; ua_state != STOP; i++)
+    {
+      res = read(port, &buffer[i], 1);
+      advance_state_UA(buffer[i], &ua_state);
+    }
 
-  //retorna positivo em caso de sucesso
+    alarm(0);
+
+    if (buffer[1] ^ buffer[2] == A_SND ^ C_UA)
+    {
+      bzero(buffer, 5);
+      counter++;
+      continue;
+    }
+    counter = 0;
+    break;
+  }
+
+  printf("RECEIVER ENDS HERE\n");
+
+  return 1;
 }

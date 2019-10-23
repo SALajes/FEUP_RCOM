@@ -175,9 +175,9 @@ void makePacket(const unsigned char *data_field, size_t size, int sequence_numbe
   memcpy(llink.frame, packet, res);
 }
 
-control_t make_Spacket(unsigned char *packet)
+control_t getPacketType(unsigned char *packet)
 {
-  unsigned char c = packet[2]; //analise control byte
+  unsigned char c = packet[2]; //analyse control byte
   if (c == C_SET)
     return SET;
   if (c == C_DISC)

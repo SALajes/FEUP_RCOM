@@ -40,13 +40,11 @@ int main(int argc, char **argv)
   llink.numTransmissions = 3;
 
   llopen(atoi(argv[1]), TRANSMITTER);
-  llclose(app.fileDescriptor,TRANSMITTER);
-  // llwrite(app.fileDescriptor, field_data, 35);
-  // llwrite(app.fileDescriptor, field_data2, 18);
+  llwrite(app.fileDescriptor, field_data, 35);
+  llwrite(app.fileDescriptor, field_data2, 18);
+  llclose(app.fileDescriptor, TRANSMITTER);
 
   sleep(1);
-
-  // llclose(app.fileDescriptor, TRANSMITTER);
 
   return 0;
 }

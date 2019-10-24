@@ -39,10 +39,9 @@ int main(int argc, char **argv)
   llink.timeout = 2;
   llink.numTransmissions = 3;
   llopen(atoi(argv[1]), RECEIVER);
-  llclose(app.fileDescriptor,RECEIVER);
-  // c = llread(app.fileDescriptor, field_data);
-  // c = llread(app.fileDescriptor, field_data2);
-
+  llread(app.fileDescriptor, field_data);
+  llread(app.fileDescriptor, field_data2);
+  llclose(app.fileDescriptor, RECEIVER);
 
   return 0;
 }

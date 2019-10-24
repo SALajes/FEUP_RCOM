@@ -1,6 +1,6 @@
 #define MAXFRAMESIZE 200
-#define START 2
-#define END 3
+// #define START 2
+// #define END 3
 
 typedef struct
 {

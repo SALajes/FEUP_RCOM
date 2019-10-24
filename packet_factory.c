@@ -34,7 +34,7 @@ int stuffing(const unsigned char *array, size_t size, char *aux_array)
   return j;
 }
 
-int destuffing(const unsigned char *array, size_t size, char *aux_array)
+int destuffing(const unsigned char *array, size_t size, unsigned char *aux_array)
 {
   unsigned int i, j;
   for (i = 0, j = 0; i < size; i++, j++)

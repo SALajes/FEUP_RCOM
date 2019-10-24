@@ -48,13 +48,11 @@ int main(int argc, char **argv)
   llopen(atoi(argv[1]), RECEIVER);
 
   c = llread(app.fileDescriptor, field_data);
-  c = llread(app.fileDescriptor, field_data2);
-  // puts(field_data);
-  // printf("%d\n", c);
+  // c = llread(app.fileDescriptor, field_data2);
 
-  sleep(1);
+  sleep(1); 
 
-  llclose(app.fileDescriptor, RECEIVER);
+  // llclose(app.fileDescriptor, RECEIVER);
 
   if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
   {

@@ -41,11 +41,11 @@ int main(int argc, char **argv)
 
   llopen(atoi(argv[1]), TRANSMITTER);
   llwrite(app.fileDescriptor, field_data, 35);
-  llwrite(app.fileDescriptor, field_data2, 18);
+  // llwrite(app.fileDescriptor, field_data2, 18);
 
   sleep(1);
 
-  llclose(app.fileDescriptor, TRANSMITTER);
+  // llclose(app.fileDescriptor, TRANSMITTER);
 
   if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
   {

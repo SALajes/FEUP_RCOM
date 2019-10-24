@@ -5,7 +5,7 @@
 
 void makePacket(const unsigned char *data_field, size_t size_t, int s);
 
-int destuffing(const unsigned char *array, size_t size, char *aux_array);
+int destuffing(const unsigned char *array, size_t size, unsigned char *aux_array);
 void makeSET(unsigned char *setarr);
 void makeUA(unsigned char *uaarr);
 void makeREJ(unsigned char *REJarr, int s);

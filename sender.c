@@ -12,37 +12,18 @@
 #include "interface.h"
 #include "applicationLayer.h"
 
-#define BAUDRATE B9600
-#define MODEMDEVICE "/dev/ttyS1"
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-
-extern appLayer app;
-extern linkLayer llink;
-
 int main(int argc, char **argv)
 {
-  char field_data[35] = "amizade na faculdade de Engenharia";
-  char field_data2[18] = "ola sou a vanessa";
-  int c;
-  unsigned char buf[STRSIZE];
-  int i, sum = 0, speed = 0;
-
   if ((argc < 2) || (atoi(argv[1]) < 0 || atoi(argv[1]) > 2))
   {
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
     exit(1);
   }
 
-  llink.baudRate = BAUDRATE;
-  llink.timeout = 2;
-  llink.numTransmissions = 3;
+  //perguntar ao utilizador o nome do ficheiro a enviar
+  char file_name[13] = "textfile.txt";
 
-  llopen(atoi(argv[1]), TRANSMITTER);
-  llwrite(app.fileDescriptor, field_data, 35);
-  llwrite(app.fileDescriptor, field_data2, 18);
-  llclose(app.fileDescriptor, TRANSMITTER);
+  applicationLayerSender(atoi(argv[1]), file_name);
 
   sleep(1);
 

@@ -9,4 +9,4 @@ typedef struct
     int status;         /*TRANSMITTER | RECEIVER*/
 } appLayer;
 
-char *makeControlPacket(char control, char *file_name, FILE *file);
+int applicationLayerSender(int port, char* file_name);

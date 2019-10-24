@@ -15,8 +15,8 @@
 #include "packet_factory.h"
 #include "state_machine.h"
 
-appLayer app;
-linkLayer llink;
+extern appLayer app;
+extern linkLayer llink;
 int counter = 0;
 
 void llopenT(int fd);

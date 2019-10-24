@@ -3,7 +3,7 @@ CC = gcc
 SRCS := $(wildcard *.c)
 BINS := $(SRCS:%.c=%)
 
-dep := packet_factory.c state_machine.c interface.c
+dep := packet_factory.c state_machine.c interface.c applicationLayer.c
 
 
 all: clean sender receiver

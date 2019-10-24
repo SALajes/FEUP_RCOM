@@ -35,6 +35,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  char name[13] = "textfile.txt";
+  FILE *file = fopen(name, "r");
+  char *pointer = makeControlPacket('2', name, file);
+
   llink.baudRate = BAUDRATE;
   llink.timeout = 2;
   llink.numTransmissions = 3;

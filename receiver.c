@@ -18,8 +18,8 @@
 #define FALSE 0
 #define TRUE 1
 
-appLayer app;
-linkLayer llink;
+extern appLayer app;
+extern linkLayer llink;
 
 int main(int argc, char **argv)
 {
@@ -28,13 +28,6 @@ int main(int argc, char **argv)
   int c;
   unsigned char buf[STRSIZE];
   int i, sum = 0, speed = 0;
-
-  // if ((argc < 2) ||
-  //     ((strcmp(COM_1, argv[1]) != 0) && (strcmp(COM_2, argv[1]) != 0) &&
-  //      (strcmp(COM_3, argv[1]) != 0))) {
-  //   printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttySx\n");
-  //   exit(1);
-  // }
 
   if ((argc < 2) || (atoi(argv[1]) < 0 || atoi(argv[1]) > 2))
   {
@@ -46,20 +39,10 @@ int main(int argc, char **argv)
   llink.timeout = 2;
   llink.numTransmissions = 3;
   llopen(atoi(argv[1]), RECEIVER);
-
-  c = llread(app.fileDescriptor, field_data);
+  llclose(app.fileDescriptor,RECEIVER);
+  // c = llread(app.fileDescriptor, field_data);
   // c = llread(app.fileDescriptor, field_data2);
 
-  sleep(1); 
 
-  // llclose(app.fileDescriptor, RECEIVER);
-
-  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
-  {
-    perror("tcsetattr");
-    exit(-1);
-  }
-
-  close(app.fileDescriptor);
   return 0;
 }

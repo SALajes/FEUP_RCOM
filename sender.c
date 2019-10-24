@@ -18,8 +18,8 @@
 #define FALSE 0
 #define TRUE 1
 
-appLayer app;
-linkLayer llink;
+extern appLayer app;
+extern linkLayer llink;
 
 int main(int argc, char **argv)
 {
@@ -40,19 +40,13 @@ int main(int argc, char **argv)
   llink.numTransmissions = 3;
 
   llopen(atoi(argv[1]), TRANSMITTER);
-  llwrite(app.fileDescriptor, field_data, 35);
+  llclose(app.fileDescriptor,TRANSMITTER);
+  // llwrite(app.fileDescriptor, field_data, 35);
   // llwrite(app.fileDescriptor, field_data2, 18);
 
   sleep(1);
 
   // llclose(app.fileDescriptor, TRANSMITTER);
 
-  if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
-  {
-    perror("tcsetattr");
-    exit(-1);
-  }
-
-  close(app.fileDescriptor);
   return 0;
 }

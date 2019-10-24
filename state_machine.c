@@ -1,7 +1,7 @@
 #include "state_machine.h"
 #include "stdio.h"
 
-void advance_state_UA(char byte, states* state) {
+void advance_state_UA(unsigned char byte, states* state) {
   if (*state == START) {
     if (byte == FLAG) {
       *state = FLAG_OK;
@@ -40,7 +40,7 @@ void advance_state_UA(char byte, states* state) {
   }
 }
 
-void advance_state_SET(char byte, states* state) {
+void advance_state_SET(unsigned char byte, states* state) {
   if (*state == START) {
     if (byte == FLAG) {
       *state = FLAG_OK;
@@ -78,7 +78,7 @@ void advance_state_SET(char byte, states* state) {
   }
 }
 
-void advance_state_I(char byte, states* state, int* disc) {
+void advance_state_I(unsigned char byte, states* state, int* disc) {
   states tmp = *state;
   switch (tmp) {
     case START:
@@ -192,9 +192,48 @@ void advance_state_DISC(unsigned char byte, states* state) {
       *state = START;
     }
   } else if (*state == C_OK) {
-    if (byte == (A_SND ^ C_DISC)) {
+    if (byte == (A_SND ^ C_DISC) || byte == (A_RCV ^ C_DISC)) {
       *state = BCC_OK;
     } else if (*state == FLAG) {
+      *state = FLAG_OK;
+    } else {
+      *state = START;
+    }
+  } else if (*state == BCC_OK) {
+    if (byte == FLAG) {
+      *state = STOP;
+    } else {
+      *state = START;
+    }
+  } else if (*state == STOP) {
+  }
+}
+
+void advance_state_UA_DISC(unsigned char byte, states* state) {
+  if (*state == START) {
+    if (byte == FLAG) {
+      *state = FLAG_OK;
+    }
+  } else if (*state == FLAG_OK) {
+    if (byte == FLAG) {
+    }  // mantem se
+    else if (byte == A_SND) {
+      *state = A_OK;
+    } else {
+      *state = START;
+    }
+  } else if (*state == A_OK) {
+    if (byte == C_UA) {
+      *state = C_OK;
+    } else if (byte == FLAG) {
+      *state = FLAG_OK;
+    } else {
+      *state = START;
+    }
+  } else if (*state == C_OK) {
+    if (byte == (A_SND ^ C_UA)) {
+      *state = BCC_OK;
+    } else if (byte == FLAG) {
       *state = FLAG_OK;
     } else {
       *state = START;

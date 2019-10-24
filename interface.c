@@ -15,8 +15,8 @@
 #include "packet_factory.h"
 #include "state_machine.h"
 
-extern appLayer app;
-extern linkLayer llink;
+appLayer app;
+linkLayer llink;
 int counter = 0;
 
 void llopenT(int fd);
@@ -173,9 +173,9 @@ void llopenR(int fd) {
     // alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_SET(buf[i], &state);
-      printf("STATE: %d\n", state);
+      // printf("STATE: %d\n", state);
     }
     alarm(0);
 
@@ -345,7 +345,8 @@ int llread(int fd, char* buffer) {
     }
 
     if (disc) {
-      // llclose(fd, RECEIVER);
+      llcloseR(fd, RECEIVER);
+      // printf("ola encontrei um disc :)\n");
       return 0;
     } else {
       destuf_buf_size = destuffing(data_packet, packet_size, destuf_buf);
@@ -378,32 +379,27 @@ int llread(int fd, char* buffer) {
 }
 
 int llclose(int fd, int flag) {
-  switch (flag) {
-    case TRANSMITTER:
+  counter = 0;
+  if(flag ==TRANSMITTER)
       llcloseT(fd, flag);
-      break;
-    case RECEIVER:
-      llcloseR(fd, flag);
-      break;
-    default:
-      break;
-  }
 
+
+  sleep(1);
   close(fd);
   tcsetattr(fd, TCSANOW, &llink.oldPortSettings);
-
-  return 1;
+  return 0;
 }
 
 void llcloseT(int fd, int flag) {
   // fd identificador da ligação de dados
 
   unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
-  unsigned char uaArray[5] = {FLAG, A_SND, C_UA, A_SND ^ C_UA, FLAG};
-  unsigned char buffer[256];
+  unsigned char uaArray[5] = {FLAG, A_SND, C_UA, (A_SND ^ C_UA), FLAG};
+  unsigned char buffer[255];
   int res;
 
   states disc_state = START;
+  counter = 0;
 
   memcpy(llink.frame, discArray, 5);
 
@@ -412,17 +408,22 @@ void llcloseT(int fd, int flag) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
+    //Send DISC
     res = write(fd, discArray, 5);
 
+    //WAIT FOR DISC
     alarm(llink.timeout);
     for (unsigned int i = 0; disc_state != STOP; i++) {
       res = read(fd, &buffer[i], 1);
       advance_state_DISC(buffer[i], &disc_state);
+      printf("BYTE: %#x\n", buffer[i]);
+      printf("STATE: %d\n", disc_state);
     }
     alarm(0);
 
     // if message is corrupted
     if ((buffer[1] ^ buffer[2]) != (A_RCV ^ C_DISC)) {
+      printf("oi\n");
       bzero(buffer, 5);
       counter++;
       continue;
@@ -432,62 +433,67 @@ void llcloseT(int fd, int flag) {
     break;
   }
 
+  //SEND UA
+  printf("Sending UA\n");
+  // memcpy(llink.frame,uaArray,5);
   write(fd, uaArray, 5);
 }
 // Closes RCV function before ending of times and we all pass RCOM
 void llcloseR(int fd, int flag) {
   unsigned char buffer[256];
-  unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
+  unsigned char discArray[5] = {FLAG, A_RCV, C_DISC, (A_RCV ^ C_DISC), FLAG};
 
   int res;
 
   states disc_state = START, ua_state = START;
 
-  while (1) {
-    if (counter == llink.numTransmissions) {
-      perror("Exceeded max number of tries. Exiting");
-      exit(-1);
-    }
+  //Read Disc from 
+  // while (1) {
+  //   if (counter == llink.numTransmissions) {
+  //     perror("Exceeded max number of tries. Exiting");
+  //     exit(-1);
+  //   }
 
-    for (unsigned int i = 0; disc_state != STOP; i++) {
-      puts("Reading now...");
-      res = read(fd, &buffer, 1);
-      printf("%X", buffer[i]);
-      advance_state_DISC(buffer[i], &disc_state);
-    }
-    if ((buffer[1] ^ buffer[2]) != (A_SND ^ C_DISC)) {
-      bzero(buffer, 5);
-      counter++;
-      continue;
-    }
-    counter = 0;
-    break;
-  }
+  //   for (unsigned int i = 0; disc_state != STOP; i++) {
+  //     res = read(fd, &buffer, 1);
+  //     advance_state_DISC(buffer[i], &disc_state);
+  //     printf("BYTE: %#x\n", buffer[i]);
+  //     printf("STATE: %d\n", disc_state);
+  //   }
+  //   if ((buffer[1] ^ buffer[2]) != (A_SND ^ C_DISC)) {
+  //     bzero(buffer, 5);
+  //     counter++;
+  //     continue;
+  //   }
+  //   counter = 0;
+  //   break;
+  // }
 
   write(fd, discArray, 5);
-  alarm(llink.timeout);
-
+  memcpy(llink.frame,discArray,5);
+  //Read UA
   while (1) {
     if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-
+    alarm(llink.timeout);
     for (unsigned int i = 0; ua_state != STOP; i++) {
+      printf("Reading for UA\n");
       res = read(fd, &buffer[i], 1);
-      advance_state_UA(buffer[i], &ua_state);
+      advance_state_UA_DISC(buffer[i], &ua_state);
+      printf("BYTE: %#x\n", buffer[i]);
+      printf("STATE: %d\n", ua_state);
     }
-
     alarm(0);
 
     if ((buffer[1] ^ buffer[2]) == (A_SND ^ C_UA)) {
       bzero(buffer, 5);
-      counter++;
+      counter++; 
       continue;
     }
+
     counter = 0;
     break;
   }
-
-  printf("RECEIVER ENDS HERE\n");
 }

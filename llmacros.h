@@ -29,7 +29,7 @@
 #define RECEIVER 1
 
 #define MAX_FRAME_SIZE 255
-#define MAX_DATA_PACKET_SIZE MAX_FRAME_SIZE - 
+#define MAX_DATA_PACKET_SIZE (MAX_FRAME_SIZE - 6) 
 
 typedef enum
 {

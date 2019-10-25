@@ -1,5 +1,6 @@
 #include "applicationLayer.h"
 #include "llmacros.h"
+#include "interface.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -77,7 +78,7 @@ unsigned int makeControlPacket(char *file_name, FILE *file, int control_byte)
     it++;
     memcpy(it, V2, L2);
 
-    return L2+L1+5;
+    return L2 + L1 + 5;
 }
 
 //application layer sender
@@ -92,7 +93,6 @@ int applicationLayerSender(int port, char *file_name)
         return -1;
     }
 
-
     llink.baudRate = BAUDRATE;
     llink.timeout = 2;
     llink.numTransmissions = 3;
@@ -105,7 +105,7 @@ int applicationLayerSender(int port, char *file_name)
     // this cycle: is meant to first send a control packet using llwrite to start the transmition! control = 2 -> writeControlPacket(char control)
     // is meant for writing UNTIL it reaches end of file
     // is meant to, at last, send a control packet using llwrite to end the transmition! control = 3 -> writeControlPacket(char control)
-    
+
     controlp_size = makeControlPacket(file_name, file, APP_C_END);
     llwrite(app.fileDescriptor, control_packet, controlp_size);
 
@@ -115,11 +115,30 @@ int applicationLayerSender(int port, char *file_name)
 //application layer receiver
 int applicationLayerReceiver(int port)
 {
+    int packet_size = 0;
     llink.baudRate = BAUDRATE;
     llink.timeout = 2;
     llink.numTransmissions = 3;
+    unsigned char packet[MAX_DATA_PACKET_SIZE];
 
     llopen(port, RECEIVER);
+    packet_size = llread(app.fileDescriptor, packet);
+
+    printf("Start\n");
+
+    for (size_t i = 0; i < packet_size; i++)
+    {
+        printf("%#x\n", packet[i]);
+    }
+
+    packet_size = llread(app.fileDescriptor, packet);
+
+    printf("End\n");
+
+    for (size_t i = 0; i < packet_size; i++)
+    {
+        printf("%#x\n", packet[i]);
+    }
 
     /*
     this cycle : is meant for reading UNTIL: start control frame is received, it reaches end of file and finally receives end control frame

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   //perguntar ao utilizador o nome do ficheiro a enviar
   char file_name[13] = "textfile.txt";
 
-  applicationLayerSender(atoi(argv[1]), file_name);
+  applicationLayerSender(atoi(argv[2]), file_name);
 
   sleep(1);
 

@@ -173,6 +173,8 @@ void makePacket(const unsigned char *data_field, size_t size, int sequence_numbe
 
   llink.frame_size = res;
   memcpy(llink.frame, packet, res);
+
+  free(bcc2_aux);
 }
 
 control_t getPacketType(unsigned char *packet)

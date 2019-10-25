@@ -28,6 +28,9 @@
 #define TRANSMITTER 0
 #define RECEIVER 1
 
+#define MAX_FRAME_SIZE 255
+#define MAX_DATA_PACKET_SIZE MAX_FRAME_SIZE - 
+
 typedef enum
 {
     START = 0,
@@ -47,7 +50,7 @@ typedef struct  {
   unsigned int sequenceNumber;    /*Número de sequência da trama: 0, 1*/
   unsigned int timeout;           /*Valor do temporizador: 1 s*/
   unsigned int numTransmissions;  /*Número de tentativas em caso de falha*/
-  char frame[255];                /*Trama*/
+  char frame[MAX_FRAME_SIZE];                /*Trama*/
   unsigned int frame_size;
 } linkLayer;
 

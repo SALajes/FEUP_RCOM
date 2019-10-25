@@ -163,6 +163,8 @@ int llopen(int port, int flag)
     break;
   }
 
+  free(path);
+
   return fd;
 }
 

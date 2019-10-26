@@ -429,8 +429,8 @@ int llclose(int fd, int flag)
     llcloseR(fd, flag);
 
   sleep(1);
-  close(fd);
   tcsetattr(fd, TCSANOW, &llink.oldPortSettings);
+  close(fd);
   return 0;
 }
 

@@ -1,8 +1,10 @@
 #include "packet_factory.h"
-#include "applicationLayer.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "applicationLayer.h"
 #include "llmacros.h"
 
 #define BYTE_LEN 1
@@ -10,59 +12,52 @@
 extern appLayer app;
 extern linkLayer llink;
 
-int stuffing(const unsigned char *array, size_t size, char *aux_array)
-{
+int stuffing(const unsigned char* array, size_t size, char* aux_array) {
   unsigned int i, j;
-  for (i = 0, j = 0; i < size; i++, j++)
-  {
-    switch (array[i])
-    {
-    case FLAG:
-      aux_array[j] = ESC_OCT;
-      aux_array[j + 1] = FLAG_STF;
-      j++;
-      break;
-    case ESC_OCT:
-      aux_array[j] = ESC_OCT;
-      aux_array[j + 1] = ESC_STF;
-      j++;
-      break;
-    default:
-      aux_array[j] = array[i];
-    }
-  }
-  return j;
-}
-
-int destuffing(const unsigned char *array, size_t size, unsigned char *aux_array)
-{
-  unsigned int i, j;
-  for (i = 0, j = 0; i < size; i++, j++)
-  {
-    if (array[i] == ESC_OCT)
-    {
-      switch (array[i + 1])
-      {
-      case FLAG_STF:
-        aux_array[j] = FLAG_OCT;
-        i++;
-        break;
-      case ESC_STF:
+  for (i = 0, j = 0; i < size; i++, j++) {
+    switch (array[i]) {
+      case FLAG:
         aux_array[j] = ESC_OCT;
-        i++;
+        aux_array[j + 1] = FLAG_STF;
+        j++;
+        break;
+      case ESC_OCT:
+        aux_array[j] = ESC_OCT;
+        aux_array[j + 1] = ESC_STF;
+        j++;
         break;
       default:
-        break;
-      }
+        aux_array[j] = array[i];
     }
-    else
+  }
+  return j;
+}
+
+int destuffing(const unsigned char* array,
+               size_t size,
+               unsigned char* aux_array) {
+  unsigned int i, j;
+  for (i = 0, j = 0; i < size; i++, j++) {
+    if (array[i] == ESC_OCT) {
+      switch (array[i + 1]) {
+        case FLAG_STF:
+          aux_array[j] = FLAG_OCT;
+          i++;
+          break;
+        case ESC_STF:
+          aux_array[j] = ESC_OCT;
+          i++;
+          break;
+        default:
+          break;
+      }
+    } else
       aux_array[j] = array[i];
   }
   return j;
 }
 
-void makeUA(unsigned char *uaarr)
-{
+void makeUA(unsigned char* uaarr) {
   uaarr[0] = FLAG;
   uaarr[1] = A_RCV;
   uaarr[2] = C_UA;
@@ -70,24 +65,20 @@ void makeUA(unsigned char *uaarr)
   uaarr[4] = FLAG;
 }
 
-unsigned char *makeBcc(const unsigned char *data_field, int size)
-{
-  unsigned char *Bcc = malloc(1);
+unsigned char makeBcc(const unsigned char* data_field, int size) {
+  unsigned char Bcc = 0;
 
-  Bcc[0] = data_field[0];
+  Bcc = data_field[0];
 
-  for (int i = 1; i < size; i++)
-  {
-    Bcc[0] = Bcc[0] ^ data_field[i];
+  for (int i = 1; i < size; i++) {
+    Bcc = Bcc ^ data_field[i];
   }
 
   return Bcc;
 }
 
-int checkBcc2(const unsigned char *data_field, int size, unsigned char bcc)
-{
-  if (data_field == NULL)
-  {
+int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc) {
+  if (data_field == NULL) {
     return false;
   }
 
@@ -95,16 +86,14 @@ int checkBcc2(const unsigned char *data_field, int size, unsigned char bcc)
 
   new_bcc = data_field[0];
 
-  for (size_t i = 1; i < size; i++)
-  {
+  for (size_t i = 1; i < size; i++) {
     new_bcc = new_bcc ^ data_field[i];
   }
 
   return new_bcc == bcc;
 }
 
-void makeSET(unsigned char *setarr)
-{
+void makeSET(unsigned char* setarr) {
   if (setarr == NULL)
     return;
   setarr[0] = FLAG;
@@ -114,8 +103,7 @@ void makeSET(unsigned char *setarr)
   setarr[4] = FLAG;
 }
 
-void makeREJ(unsigned char *REJarr, int s)
-{
+void makeREJ(unsigned char* REJarr, int s) {
   if (REJarr == NULL)
     return;
   REJarr[0] = FLAG;
@@ -125,8 +113,7 @@ void makeREJ(unsigned char *REJarr, int s)
   REJarr[4] = FLAG;
 }
 
-void makeRR(unsigned char *RRarr, int s)
-{
+void makeRR(unsigned char* RRarr, int s) {
   if (RRarr == NULL)
     return;
   RRarr[0] = FLAG;
@@ -137,17 +124,18 @@ void makeRR(unsigned char *RRarr, int s)
 }
 
 /** Change name from packet to frame */
-void makePacket(const unsigned char *data_field, size_t size, int sequence_number)
-{
+void makePacket(const unsigned char* data_field,
+                size_t size,
+                int sequence_number) {
   char packet[size * 3];
-  char *aux_array = malloc(size * 2);
+  char* aux_array = malloc(size * 2);
   int res = 0;
   int stf_size;
-  char *bcc2_aux = malloc(2);
+  char* bcc2_aux = malloc(2);
 
   bzero(packet, size * 3);
 
-  //Header
+  // Header
   packet[0] = FLAG_OCT;
   packet[1] = A_SND;
   packet[2] = (sequence_number) ? C_I1 : C_I0;
@@ -162,7 +150,8 @@ void makePacket(const unsigned char *data_field, size_t size, int sequence_numbe
 
   // Bcc for data
   // packet[res] = 0; // use this to put bcc2 with error
-  bcc2_aux[0] = *makeBcc(data_field, size);
+  bcc2_aux[0] = makeBcc(data_field, size);
+  printf("zeros\n");
   stf_size = stuffing(bcc2_aux, 1, aux_array);
   memcpy(packet + res, bcc2_aux, stf_size);
   res += stf_size;
@@ -177,9 +166,8 @@ void makePacket(const unsigned char *data_field, size_t size, int sequence_numbe
   free(bcc2_aux);
 }
 
-control_t getPacketType(unsigned char *packet)
-{
-  unsigned char c = packet[2]; //analyse control byte
+control_t getPacketType(unsigned char* packet) {
+  unsigned char c = packet[2];  // analyse control byte
   if (c == C_SET)
     return SET;
   if (c == C_DISC)

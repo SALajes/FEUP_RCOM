@@ -24,15 +24,12 @@ void llopenR(int fd);
 void llcloseT(int fd, int flag);
 void llcloseR(int fd, int flag);
 
-void alarm_handler()
-{
+void alarm_handler() {
   tcflush(app.fileDescriptor, TCIOFLUSH);
 
-  if (llink.numTransmissions == counter)
-  {
+  if (llink.numTransmissions == counter) {
     printf("Could not connect to receiver. Halting execution...\n");
-    if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1)
-    {
+    if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
       perror("tcsetattr");
       close(app.fileDescriptor);
       exit(-1);
@@ -42,41 +39,36 @@ void alarm_handler()
   }
   counter++;
   printf("Connection timed out. Retrying... (attempt number %d) \n", counter);
-  if (app.status == TRANSMITTER)
-  {
+  if (app.status == TRANSMITTER) {
     write(app.fileDescriptor, llink.frame, llink.frame_size);
   }
   alarm(llink.timeout);
 }
 
-char *getPort(int port)
-{
-  char *path = malloc(10);
-  switch (port)
-  {
-  case 0:
-    strcat(path, "/dev/ttyS0");
-    break;
-  case 1:
-    strcat(path, "/dev/ttyS1");
-    break;
-  case 2:
-    strcat(path, "/dev/ttyS2");
-    break;
+char* getPort(int port) {
+  char* path = malloc(10);
+  switch (port) {
+    case 0:
+      strcat(path, "/dev/ttyS0");
+      break;
+    case 1:
+      strcat(path, "/dev/ttyS1");
+      break;
+    case 2:
+      strcat(path, "/dev/ttyS2");
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return path;
 }
 
-int setTermios(int fd)
-{
+int setTermios(int fd) {
   struct termios oldtio, newtio;
 
-  if (tcgetattr(fd, &oldtio) == -1)
-  { /* save current port settings */
+  if (tcgetattr(fd, &oldtio) == -1) { /* save current port settings */
     perror("tcgetattr");
     exit(-1);
   }
@@ -101,8 +93,7 @@ int setTermios(int fd)
 
   tcflush(fd, TCIOFLUSH);
 
-  if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-  {
+  if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
@@ -112,13 +103,11 @@ int setTermios(int fd)
   return 0;
 }
 
-int llopen(int port, int flag)
-{
-  int fd; // serial port file
-  char *path;
+int llopen(int port, int flag) {
+  int fd;  // serial port file
+  char* path;
 
-  if (flag != TRANSMITTER && flag != RECEIVER)
-  {
+  if (flag != TRANSMITTER && flag != RECEIVER) {
     perror("Wrong flag");
     return -1;
   }
@@ -131,15 +120,13 @@ int llopen(int port, int flag)
 
   fd = open(path, O_RDWR | O_NOCTTY);
   // Checks if port has opened without errors
-  if (fd < 0)
-  {
+  if (fd < 0) {
     perror(path);
     exit(-1);
   }
 
   // Set new termios settings
-  if (setTermios(fd) < 0)
-  {
+  if (setTermios(fd) < 0) {
     perror("Setting termios failed");
     return -1;
   }
@@ -151,16 +138,15 @@ int llopen(int port, int flag)
 
   app.fileDescriptor = fd;
 
-  switch (flag)
-  {
-  case TRANSMITTER:
-    llopenT(fd);
-    break;
-  case RECEIVER:
-    llopenR(fd);
-    break;
-  default:
-    break;
+  switch (flag) {
+    case TRANSMITTER:
+      llopenT(fd);
+      break;
+    case RECEIVER:
+      llopenR(fd);
+      break;
+    default:
+      break;
   }
 
   free(path);
@@ -168,8 +154,7 @@ int llopen(int port, int flag)
   return fd;
 }
 
-void llopenR(int fd)
-{
+void llopenR(int fd) {
   unsigned char uaArr[5];
   unsigned char buf[255];
   int res;
@@ -179,10 +164,8 @@ void llopenR(int fd)
   makeUA(uaArr);
 
   // Receive SET
-  while (1)
-  {
-    if (counter == llink.numTransmissions)
-    {
+  while (1) {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
@@ -190,8 +173,7 @@ void llopenR(int fd)
     // printf("STATE: %d\n", state);
 
     // alarm(llink.timeout);
-    for (size_t i = 0; state != STOP; i++)
-    {
+    for (size_t i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
       // printf("BYTE: %#x\n", buf[i]);
       advance_state_SET(buf[i], &state);
@@ -200,7 +182,8 @@ void llopenR(int fd)
     alarm(0);
 
     if (((buf[1] ^ buf[2]) != buf[3]) &&
-        (buf[3] != (A_SND ^ C_SET))) // Verifies if the sender's BCC is not valid
+        (buf[3] !=
+         (A_SND ^ C_SET)))  // Verifies if the sender's BCC is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -215,8 +198,7 @@ void llopenR(int fd)
   res = write(fd, uaArr, 5);
 }
 
-void llopenT(int fd)
-{
+void llopenT(int fd) {
   unsigned char setArr[5];
   unsigned char buf[255];
   int res;
@@ -227,10 +209,8 @@ void llopenT(int fd)
 
   memcpy(llink.frame, setArr, 5);
 
-  while (1)
-  {
-    if (counter == llink.numTransmissions)
-    {
+  while (1) {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
@@ -242,8 +222,7 @@ void llopenT(int fd)
 
     // Receive UA
     alarm(llink.timeout);
-    for (size_t i = 0; state != STOP; i++)
-    {
+    for (size_t i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
       // printf("BYTE: %#x\n", buf[i]);
       advance_state_UA(buf[i], &state);
@@ -252,7 +231,7 @@ void llopenT(int fd)
     alarm(0);
 
     if (((buf[1] ^ buf[2]) != buf[3]) &&
-        (buf[3] != (A_RCV ^ C_UA))) // verifies if receiver's Bcc is not valid
+        (buf[3] != (A_RCV ^ C_UA)))  // verifies if receiver's Bcc is not valid
     {
       bzero(buf, 5);
       counter++;
@@ -264,25 +243,22 @@ void llopenT(int fd)
   }
 }
 
-int llwrite(int fd, char *buffer, int length)
-{
-  if (length <= 0)
-  {
+int llwrite(int fd, char* buffer, int length) {
+  if (length <= 0) {
     perror("length 0 or less");
     return -1;
   }
-  makePacket(buffer, length, llink.sequenceNumber);
 
+  makePacket(buffer, length, llink.sequenceNumber);
+  printf("fiz o packet\n");
   counter = 0;
 
-  while (1)
-  {
+  while (1) {
     unsigned char buf[255], bcc;
     int res;
     states state = START;
 
-    if (counter == llink.numTransmissions)
-    {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
@@ -297,8 +273,7 @@ int llwrite(int fd, char *buffer, int length)
 
     // Receive RR or REJ
     alarm(llink.timeout);
-    for (i = 0; state != STOP; i++)
-    {
+    for (i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
       // printf("BYTE: %#x\n", buf[i]);
       advance_state_RR(buf[i], &state);
@@ -309,7 +284,7 @@ int llwrite(int fd, char *buffer, int length)
     bcc = buf[3];
 
     // Check BCC
-    if (buf[3] != (buf[2] ^ buf[1])) // verifies if receveir's Bcc is not valid
+    if (buf[3] != (buf[2] ^ buf[1]))  // verifies if receveir's Bcc is not valid
     {
       counter++;
       continue;
@@ -317,22 +292,20 @@ int llwrite(int fd, char *buffer, int length)
 
     Spacket = getPacketType(buf);
 
-    switch (Spacket)
-    {
-    case RR:
-      if ((llink.sequenceNumber && buf[3] == C_RR0) ||
-          (!llink.sequenceNumber && buf[3] == C_RR1))
-      {
-        res = llink.frame_size;
-      }
-      break;
-    case REJ:
-      // res = write(fd, llink.frame, llink.frame_size);
-      counter++;
-      continue;
-    default:
-      return -1;
-      break;
+    switch (Spacket) {
+      case RR:
+        if ((llink.sequenceNumber && buf[3] == C_RR0) ||
+            (!llink.sequenceNumber && buf[3] == C_RR1)) {
+          res = llink.frame_size;
+        }
+        break;
+      case REJ:
+        // res = write(fd, llink.frame, llink.frame_size);
+        counter++;
+        continue;
+      default:
+        return -1;
+        break;
     }
 
     llink.sequenceNumber = !llink.sequenceNumber;
@@ -345,20 +318,17 @@ no llread vai ser necessario adicionar uma parte à maquina de estados, para cas
 C seja C_DISC, verifica, a BCC e se a seguir vem a flag, e neste caso chama a
 funçao receivedDISCframeRCV
 */
-int llread(int fd, char *buffer)
-{
+int llread(int fd, char* buffer) {
   counter = 0;
 
-  while (1)
-  {
-    if (counter == llink.numTransmissions)
-    {
+  while (1) {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
     unsigned char data_packet[255], header[5], buf[255], destuf_buf[255 * 3];
     int res, bcc_correct;
-    int disc = 0; // bool to see if it received a DISC packet
+    int disc = 0;  // bool to see if it received a DISC packet
     states state = START;
     unsigned char bcc2;
     size_t i;
@@ -366,28 +336,23 @@ int llread(int fd, char *buffer)
 
     // Read packet
 
-    for (i = 0; state != STOP; i++)
-    {
+    for (i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
       // printf("BYTE: %#x\n", buf[i]);
       advance_state_I(buf[i], &state, &disc);
       // printf("STATE: %d %d\n", state, disc);
-      if (state == DATA_R)
-      {
+      if (state == DATA_R) {
         // printf("Sicke");
         data_packet[packet_size] = buf[i];
         packet_size++;
       }
     }
 
-    if (disc)
-    {
+    if (disc) {
       llcloseR(fd, RECEIVER);
       // printf("ola encontrei um disc :)\n");
       return 0;
-    }
-    else
-    {
+    } else {
       destuf_buf_size = destuffing(data_packet, packet_size, destuf_buf);
 
       printf("receber bcc %d  %d\n", packet_size, destuf_buf_size);
@@ -397,13 +362,10 @@ int llread(int fd, char *buffer)
       bcc_correct = checkBcc2(destuf_buf, destuf_buf_size - 1, bcc2);
 
       // Checks if bcc2 is correct
-      if (bcc_correct)
-      {
+      if (bcc_correct) {
         // send RR
         makeRR(header, !llink.sequenceNumber);
-      }
-      else
-      {
+      } else {
         // send REJ
         makeREJ(header, !llink.sequenceNumber);
         res = write(fd, header, 5);
@@ -413,6 +375,7 @@ int llread(int fd, char *buffer)
 
       printf("mandei o rr ou rej\n");
       res = write(fd, header, 5);
+      memcpy(buffer, destuf_buf, destuf_buf_size - 1);
 
       llink.sequenceNumber = !llink.sequenceNumber;
       return (bcc_correct) ? packet_size : -1;
@@ -420,8 +383,7 @@ int llread(int fd, char *buffer)
   }
 }
 
-int llclose(int fd, int flag)
-{
+int llclose(int fd, int flag) {
   counter = 0;
   if (flag == TRANSMITTER)
     llcloseT(fd, flag);
@@ -429,13 +391,12 @@ int llclose(int fd, int flag)
     llcloseR(fd, flag);
 
   sleep(1);
-  close(fd);
   tcsetattr(fd, TCSANOW, &llink.oldPortSettings);
+  close(fd);
   return 0;
 }
 
-void llcloseT(int fd, int flag)
-{
+void llcloseT(int fd, int flag) {
   // fd identificador da ligação de dados
   puts("Entrei no llcloseT");
   unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
@@ -448,28 +409,24 @@ void llcloseT(int fd, int flag)
 
   memcpy(llink.frame, discArray, 5);
 
-  while (1)
-  {
-    if (counter == llink.numTransmissions)
-    {
+  while (1) {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-    //Send DISC
+    // Send DISC
     res = write(fd, discArray, 5);
 
-    //WAIT FOR DISC
+    // WAIT FOR DISC
     alarm(llink.timeout);
-    for (unsigned int i = 0; disc_state != STOP; i++)
-    {
+    for (unsigned int i = 0; disc_state != STOP; i++) {
       res = read(fd, &buffer[i], 1);
       advance_state_DISC(buffer[i], &disc_state);
     }
     alarm(0);
 
     // if message is corrupted
-    if ((buffer[1] ^ buffer[2]) != (A_RCV ^ C_DISC))
-    {
+    if ((buffer[1] ^ buffer[2]) != (A_RCV ^ C_DISC)) {
       bzero(buffer, 5);
       counter++;
       continue;
@@ -479,14 +436,13 @@ void llcloseT(int fd, int flag)
     break;
   }
 
-  //SEND UA
+  // SEND UA
   printf("Sending UA\n");
   // memcpy(llink.frame,uaArray,5);
   write(fd, uaArray, 5);
 }
 // Closes RCV function before ending of times and we all pass RCOM
-void llcloseR(int fd, int flag)
-{
+void llcloseR(int fd, int flag) {
   puts("Entrei no llcloseR");
   unsigned char buffer[256];
   unsigned char discArray[5] = {FLAG, A_RCV, C_DISC, (A_RCV ^ C_DISC), FLAG};
@@ -497,24 +453,22 @@ void llcloseR(int fd, int flag)
 
   write(fd, discArray, 5);
   memcpy(llink.frame, discArray, 5);
-  //Read UA
-  while (1)
-  {
-    if (counter == llink.numTransmissions)
-    {
+  // Read UA
+  while (1) {
+    if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
+    printf("tou preso\n");
     alarm(llink.timeout);
-    for (unsigned int i = 0; ua_state != STOP; i++)
-    {
+    for (unsigned int i = 0; ua_state != STOP; i++) {
       res = read(fd, &buffer[i], 1);
       advance_state_UA_DISC(buffer[i], &ua_state);
     }
     alarm(0);
+    printf("sai\n");
 
-    if ((buffer[1] ^ buffer[2]) == (A_SND ^ C_UA))
-    {
+    if ((buffer[1] ^ buffer[2]) == (A_SND ^ C_UA)) {
       bzero(buffer, 5);
       counter++;
       continue;

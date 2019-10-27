@@ -134,7 +134,6 @@ int llopen(int port, int flag) {
   signal(SIGALRM, alarm_handler);
 
   strcpy(llink.port, path);
-  free(path);
 
   app.fileDescriptor = fd;
 
@@ -148,9 +147,6 @@ int llopen(int port, int flag) {
     default:
       break;
   }
-
-  free(path);
-
   return fd;
 }
 

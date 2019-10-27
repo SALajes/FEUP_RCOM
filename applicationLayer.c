@@ -25,7 +25,7 @@ unsigned int makeDataPacket(FILE* file) {
   int size = fread(data + header_size, sizeof(unsigned char),
                    MAX_DATA_PACKET_SIZE - 4, file);
   *it = APP_C_DATA;
-  it++;
+  it+=sizeof(int);
   *it = (app.lastchunk + 1) % 255;
   it++;
   int L1 = size / 256;
@@ -145,6 +145,7 @@ int applicationLayerReceiver(int port) {
         break;
       default:
         break;
+        for (; i < data_size; it++)
     }
 
     if (packet[0] == APP_C_END) {
@@ -152,7 +153,7 @@ int applicationLayerReceiver(int port) {
       break;
     }
   }
-
+  fclose(file);
   return llclose(app.fileDescriptor, RECEIVER);
 }
 

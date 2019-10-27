@@ -12,7 +12,9 @@
 extern appLayer app;
 extern linkLayer llink;
 
-int stuffing(const unsigned char* array, size_t size, char* aux_array) {
+int stuffing(const unsigned char* array,
+             size_t size,
+             unsigned char* aux_array) {
   unsigned int i, j;
   for (i = 0, j = 0; i < size; i++, j++) {
     switch (array[i]) {
@@ -25,7 +27,7 @@ int stuffing(const unsigned char* array, size_t size, char* aux_array) {
         aux_array[j] = ESC_OCT;
         aux_array[j + 1] = ESC_STF;
         j++;
-        break;
+        continue;
       default:
         aux_array[j] = array[i];
     }
@@ -43,14 +45,15 @@ int destuffing(const unsigned char* array,
         case FLAG_STF:
           aux_array[j] = FLAG_OCT;
           i++;
-          break;
+          continue;
         case ESC_STF:
           aux_array[j] = ESC_OCT;
           i++;
-          break;
+          continue;
         default:
           break;
       }
+
     } else
       aux_array[j] = array[i];
   }
@@ -68,9 +71,7 @@ void makeUA(unsigned char* uaarr) {
 unsigned char makeBcc(const unsigned char* data_field, int size) {
   unsigned char Bcc = 0;
 
-  Bcc = data_field[0];
-
-  for (int i = 1; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     Bcc = Bcc ^ data_field[i];
   }
 
@@ -78,18 +79,15 @@ unsigned char makeBcc(const unsigned char* data_field, int size) {
 }
 
 int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc) {
-  if (data_field == NULL) {
-    return false;
-  }
-
   unsigned char new_bcc;
 
-  new_bcc = data_field[0];
+  new_bcc = 0x00;
 
-  for (size_t i = 1; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     new_bcc = new_bcc ^ data_field[i];
   }
 
+  printf("Bcc: %d %#x new %#x\n", new_bcc == bcc, bcc, new_bcc);
   return new_bcc == bcc;
 }
 
@@ -127,11 +125,11 @@ void makeRR(unsigned char* RRarr, int s) {
 void makePacket(const unsigned char* data_field,
                 size_t size,
                 int sequence_number) {
-  char packet[size * 3];
-  char* aux_array = malloc(size * 2);
+  unsigned char packet[size * 3];
+  unsigned char aux_array[size * 2];
   int res = 0;
   int stf_size;
-  char* bcc2_aux = malloc(2);
+  unsigned char bcc2_aux[2];
 
   bzero(packet, size * 3);
 
@@ -151,19 +149,19 @@ void makePacket(const unsigned char* data_field,
   // Bcc for data
   // packet[res] = 0; // use this to put bcc2 with error
   bcc2_aux[0] = makeBcc(data_field, size);
-  printf("zeros\n");
   stf_size = stuffing(bcc2_aux, 1, aux_array);
-  memcpy(packet + res, bcc2_aux, stf_size);
+  if (stf_size == 2)
+    printf("bcc2:%#x bcc2:%#x size:%d\n", bcc2_aux[0], bcc2_aux[1], stf_size);
+  memcpy(packet + res, aux_array, stf_size);
   res += stf_size;
 
-  char flag[BYTE_LEN] = {FLAG_OCT};
-  memcpy(packet + res, flag, BYTE_LEN);
+  // char flag[BYTE_LEN] = {FLAG_OCT};
+  // memcpy(packet + res, flag, BYTE_LEN);
+  packet[res] = FLAG_OCT;
   res++;
 
   llink.frame_size = res;
   memcpy(llink.frame, packet, res);
-
-  free(bcc2_aux);
 }
 
 control_t getPacketType(unsigned char* packet) {

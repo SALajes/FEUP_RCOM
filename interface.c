@@ -40,6 +40,7 @@ void alarm_handler() {
   counter++;
   printf("Connection timed out. Retrying... (attempt number %d) \n", counter);
   if (app.status == TRANSMITTER) {
+    tcflush(app.fileDescriptor, TCIOFLUSH);
     write(app.fileDescriptor, llink.frame, llink.frame_size);
   }
   alarm(llink.timeout);
@@ -239,7 +240,7 @@ void llopenT(int fd) {
   }
 }
 
-int llwrite(int fd, char* buffer, int length) {
+int llwrite(int fd, unsigned char* buffer, int length) {
   if (length <= 0) {
     perror("length 0 or less");
     return -1;
@@ -249,7 +250,7 @@ int llwrite(int fd, char* buffer, int length) {
   counter = 0;
 
   while (1) {
-    unsigned char buf[MAX_FRAME_SIZE], bcc;
+    unsigned char buf[MAX_FRAME_SIZE * 3], bcc;
     int res;
     states state = START;
 
@@ -262,6 +263,7 @@ int llwrite(int fd, char* buffer, int length) {
     control_t Spacket;
 
     // Send I packet
+    tcflush(app.fileDescriptor, TCIOFLUSH);
     res = write(fd, llink.frame, llink.frame_size);
 
     // printf("STATE: %d\n", state);
@@ -297,6 +299,7 @@ int llwrite(int fd, char* buffer, int length) {
         break;
       case REJ:
         // res = write(fd, llink.frame, llink.frame_size);
+        printf("Got rejected %d\n ",llink.sequenceNumber);
         counter++;
         continue;
       default:
@@ -314,53 +317,60 @@ no llread vai ser necessario adicionar uma parte à maquina de estados, para cas
 C seja C_DISC, verifica, a BCC e se a seguir vem a flag, e neste caso chama a
 funçao receivedDISCframeRCV
 */
-int llread(int fd, char* buffer) {
+int llread(int fd, unsigned char* buffer) {
   counter = 0;
-  int packet_size = 0;
-  int i;
-  int disc = 0;  // bool to see if it received a DISC packet
-  unsigned char data_packet[MAX_FRAME_SIZE], header[5], buf[MAX_FRAME_SIZE],destuf_buf[MAX_FRAME_SIZE * 5];
-  int res, bcc_correct;
-
+  printf("ola\n");
   while (1) {
     if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-    disc = 0;  // bool to see if it received a DISC packet
-    data_packet[0] = 0;
-    header[0] = 0;
-    buf[0] = 0;
-    destuf_buf[0] = 0;
-    res = 0;
-    bcc_correct = 0;
+    int packet_size = 0;
+    int i = 0;
+    int disc = 0;  // bool to see if it received a DISC packet
+    unsigned char header[5];
+    unsigned char buf[MAXFRAMESIZE*2];
+    unsigned char* data_packet = malloc(1);
+    int res, bcc_correct;
     states state = START;
-    unsigned char bcc2;
-    
+    unsigned char bcc2 = 0;
+    // bzero(buf, MAXFRAMESIZE * 3);
+
     packet_size = 0;
     int destuf_buf_size = 0;
-
     // Read packet
-
+    printf("vou ler\n");
     for (i = 0; state != STOP; i++) {
+      // printf("%d\n", state);
+      if(i == MAXFRAMESIZE)
+        break;
       res = read(fd, &buf[i], 1);
-      // printf("BYTE: %#x\n", buf[i]);
+      printf("BYTE: %#x\n", buf[i]);
       advance_state_I(buf[i], &state, &disc);
       // printf("STATE: %d %d\n", state, disc);
       if (state == DATA_R) {
         // printf("Sicke");
-        printf("i:%d size:%d\n",packet_size,MAX_FRAME_SIZE);
+        data_packet = (unsigned char*)realloc(data_packet, packet_size + 1);
         data_packet[packet_size] = buf[i];
         packet_size++;
       }
     }
 
+    printf("packet size %d\n", packet_size);
+
+    printf("ja li\n");
+    unsigned char destuf_buf[packet_size];
     if (disc) {
       llcloseR(fd, RECEIVER);
       // printf("ola encontrei um disc :)\n");
       return 0;
-    } else {
+    }
+    else {
       destuf_buf_size = destuffing(data_packet, packet_size, destuf_buf);
+      for (size_t i = 0; i < destuf_buf_size; i++)
+      {
+        printf("desBYTE: %#x\n", destuf_buf[i]);
+      }
 
       printf("receber bcc %d  %d\n", packet_size, destuf_buf_size);
       bcc2 = destuf_buf[destuf_buf_size - 1];
@@ -368,12 +378,13 @@ int llread(int fd, char* buffer) {
       printf("testar bcc\n");
       bcc_correct = checkBcc2(destuf_buf, destuf_buf_size - 1, bcc2);
 
-      // Checks if bcc2 is correct
+    // Checks if bcc2 is correct
       if (bcc_correct) {
         // send RR
         makeRR(header, !llink.sequenceNumber);
       } else {
         // send REJ
+        printf("Rejected %d\n ", !llink.sequenceNumber);
         makeREJ(header, !llink.sequenceNumber);
         res = write(fd, header, 5);
         counter++;
@@ -386,6 +397,7 @@ int llread(int fd, char* buffer) {
       printf("copiei mem\n");
 
       llink.sequenceNumber = !llink.sequenceNumber;
+      free(data_packet);
       return (bcc_correct) ? destuf_buf_size : -1;
     }
   }

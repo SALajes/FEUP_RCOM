@@ -82,6 +82,7 @@ void advance_state_I(unsigned char byte, states* state, int* disc) {
   states tmp = *state;
   switch (tmp) {
     case START:
+      *disc = 0;
       if (byte == FLAG)
         *state = FLAG_OK;
       return;

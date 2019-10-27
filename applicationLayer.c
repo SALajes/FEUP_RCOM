@@ -24,7 +24,7 @@ unsigned int makeDataPacket(FILE* file) {
   unsigned char data[MAX_DATA_PACKET_SIZE];
   unsigned char* it = data;
   int size = fread(data + header_size, sizeof(unsigned char),
-                   50, file);
+                   100, file);
   *it = APP_C_DATA;
   it++;
   *it = (unsigned char)((app.lastchunk + 1) % 255);
@@ -144,7 +144,7 @@ int applicationLayerReceiver(int port) {
       case APP_C_START:
         processControlpacket(packet);
         // file = fopen(app.file_name, "w+");
-        file = fopen("result.txt", "w+");
+        file = fopen("result.gif", "w+");
         file_fd = fileno(file);
         app.file = file;
         continue;

@@ -152,7 +152,7 @@ int llopen(int port, int flag) {
 
 void llopenR(int fd) {
   unsigned char uaArr[5];
-  unsigned char buf[255];
+  unsigned char buf[MAX_FRAME_SIZE];
   int res;
 
   states state = START;
@@ -196,7 +196,7 @@ void llopenR(int fd) {
 
 void llopenT(int fd) {
   unsigned char setArr[5];
-  unsigned char buf[255];
+  unsigned char buf[MAX_FRAME_SIZE];
   int res;
 
   states state = START;
@@ -246,11 +246,10 @@ int llwrite(int fd, char* buffer, int length) {
   }
 
   makePacket(buffer, length, llink.sequenceNumber);
-  printf("fiz o packet\n");
   counter = 0;
 
   while (1) {
-    unsigned char buf[255], bcc;
+    unsigned char buf[MAX_FRAME_SIZE], bcc;
     int res;
     states state = START;
 
@@ -276,6 +275,7 @@ int llwrite(int fd, char* buffer, int length) {
       // printf("STATE: %d\n", state);
     }
     alarm(0);
+    printf("fiz o packet\n");
 
     bcc = buf[3];
 
@@ -316,19 +316,29 @@ funçao receivedDISCframeRCV
 */
 int llread(int fd, char* buffer) {
   counter = 0;
+  int packet_size = 0;
+  int i;
+  int disc = 0;  // bool to see if it received a DISC packet
+  unsigned char data_packet[MAX_FRAME_SIZE], header[5], buf[MAX_FRAME_SIZE],destuf_buf[MAX_FRAME_SIZE * 5];
+  int res, bcc_correct;
 
   while (1) {
     if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-    unsigned char data_packet[255], header[5], buf[255], destuf_buf[255 * 3];
-    int res, bcc_correct;
-    int disc = 0;  // bool to see if it received a DISC packet
+    disc = 0;  // bool to see if it received a DISC packet
+    data_packet[0] = 0;
+    header[0] = 0;
+    buf[0] = 0;
+    destuf_buf[0] = 0;
+    res = 0;
+    bcc_correct = 0;
     states state = START;
     unsigned char bcc2;
-    size_t i;
-    size_t packet_size = 0, destuf_buf_size = 0;
+    
+    packet_size = 0;
+    int destuf_buf_size = 0;
 
     // Read packet
 
@@ -339,6 +349,7 @@ int llread(int fd, char* buffer) {
       // printf("STATE: %d %d\n", state, disc);
       if (state == DATA_R) {
         // printf("Sicke");
+        printf("i:%d size:%d\n",packet_size,MAX_FRAME_SIZE);
         data_packet[packet_size] = buf[i];
         packet_size++;
       }
@@ -372,9 +383,10 @@ int llread(int fd, char* buffer) {
       printf("mandei o rr ou rej\n");
       res = write(fd, header, 5);
       memcpy(buffer, destuf_buf, destuf_buf_size - 1);
+      printf("copiei mem\n");
 
       llink.sequenceNumber = !llink.sequenceNumber;
-      return (bcc_correct) ? packet_size : -1;
+      return (bcc_correct) ? destuf_buf_size : -1;
     }
   }
 }
@@ -397,7 +409,7 @@ void llcloseT(int fd, int flag) {
   puts("Entrei no llcloseT");
   unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
   unsigned char uaArray[5] = {FLAG, A_SND, C_UA, (A_SND ^ C_UA), FLAG};
-  unsigned char buffer[255];
+  unsigned char buffer[MAX_FRAME_SIZE];
   int res;
 
   states disc_state = START;

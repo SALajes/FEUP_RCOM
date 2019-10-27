@@ -20,10 +20,11 @@ void processDatapacket(unsigned char* packet, FILE* file);
 
 unsigned int makeDataPacket(FILE* file) {
   const int header_size = 1 + 3 * sizeof(int);
+  printf("rip aqui\n");
   unsigned char data[MAX_DATA_PACKET_SIZE];
   unsigned char* it = data;
   int size = fread(data + header_size, sizeof(unsigned char),
-                   MAX_DATA_PACKET_SIZE - 4, file);
+                   MAX_DATA_PACKET_SIZE - header_size, file);
   *it = APP_C_DATA;
   it+=sizeof(int);
   *it = (app.lastchunk + 1) % 255;
@@ -104,13 +105,13 @@ int applicationLayerSender(int port, char* file_name) {
   printf("mandei control%d\n", controlp_size);
   llwrite(app.fileDescriptor, (char*)app.packet, controlp_size);
   while (!feof(file)) {
+    app.packet[0] = 0;
     controlp_size = makeDataPacket(file);
-    for (size_t i = 0; i < controlp_size; i++) {
-      printf("%#x\n", app.packet[i]);
-    }
     llwrite(app.fileDescriptor, (char*)app.packet, controlp_size);
+    printf("Mandei packet %d com tamanho %d", app.lastchunk, controlp_size-4);
+    app.lastchunk++;
+    app.lastchunk %= 255;
   }
-
 
   controlp_size = makeControlPacket(file_name, file, APP_C_END);
   llwrite(app.fileDescriptor, app.packet, controlp_size);
@@ -132,26 +133,28 @@ int applicationLayerReceiver(int port) {
 
   while (1) {
     packet_size = llread(app.fileDescriptor, packet);
-    for (size_t i = 0; i < packet_size; i++) {
-      printf("%#x\n", packet[i]);
-    }
+    printf("li o %d packet\n", app.lastchunk);
     switch (packet[0]) {
       case APP_C_DATA:
         processDatapacket(packet, file);
-        break;
+        app.lastchunk++;
+        app.lastchunk %= 255;
+        continue;
       case APP_C_START:
         processControlpacket(packet);
-        file = fopen(app.file_name, "w+");
-        break;
+        // file = fopen(app.file_name, "w+");
+        file = fopen("result.gif", "w+");
+        app.file = file;
+        continue;
       default:
         break;
-        for (; i < data_size; it++)
     }
 
     if (packet[0] == APP_C_END) {
       perror("Wrong control byte for app layer packet.");
       break;
     }
+    
   }
   fclose(file);
   return llclose(app.fileDescriptor, RECEIVER);
@@ -201,10 +204,10 @@ void processDatapacket(unsigned char* packet, FILE* file) {
   unsigned char* it = packet + 1;  // skip control byte
   // Read Sequence
   int sequence_number = *it;  // sequence number of last packet
-  if (sequence_number != (app.lastchunk + 1) % 255) {
-    perror("Package sequence is wrong, file may be corrupted, exiting... \n");
-    exit(5);
-  }
+  // if (sequence_number != (app.lastchunk + 1) % 255) {
+  //   perror("Package sequence is wrong, file may be corrupted, exiting... \n");
+  //   exit(5);
+  // }
   app.lastchunk = sequence_number;
   it += sizeof(int);
 
@@ -217,6 +220,6 @@ void processDatapacket(unsigned char* packet, FILE* file) {
 
   // Write data on file
   for (size_t i = 0; i < data_size; it++, i++) {
-    fwrite(it, sizeof(unsigned char), 1, file);
+    fwrite(it, sizeof(unsigned char), 1, app.file);
   }
 }

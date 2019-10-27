@@ -17,6 +17,7 @@ typedef struct
     int status;         /*TRANSMITTER | RECEIVER*/
     int lastchunk;      // index of the latest chunk read
     char file_name[MAX_DATA_PACKET_SIZE];
+    FILE* file;
     char packet[MAX_DATA_PACKET_SIZE];
     int file_size;
 } appLayer;

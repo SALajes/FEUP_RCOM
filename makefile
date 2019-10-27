@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -fno-stack-protector
 
 SRCS := $(wildcard *.c)
 BINS := $(SRCS:%.c=%)

@@ -24,7 +24,7 @@ unsigned int makeDataPacket(FILE* file) {
   unsigned char data[MAX_DATA_PACKET_SIZE];
   unsigned char* it = data;
   int size = fread(data + header_size, sizeof(unsigned char),
-                   100, file);
+                   256, file);
   *it = APP_C_DATA;
   it++;
   *it = (unsigned char)((app.lastchunk + 1) % 255);
@@ -102,7 +102,7 @@ int applicationLayerSender(int port, char* file_name) {
   llopen(port, TRANSMITTER);
   // Make and Write Control Packet
   controlp_size = makeControlPacket(file_name, file, APP_C_START);
-  printf("mandei control%d\n", controlp_size);
+  // printf("mandei control%d\n", controlp_size);
   llwrite(app.fileDescriptor, (unsigned char*)app.packet, controlp_size);
   while (!feof(file)) {
     app.packet[0] = 0;

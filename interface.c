@@ -46,6 +46,15 @@ void alarm_handler() {
   alarm(llink.timeout);
 }
 
+int writepacket(int fd){
+  int res = 0;
+  for (size_t i = 0; i < llink.frame_size; i++) {
+    res += write(fd, llink.frame + i, 1);
+    printf("BYTE: %#x\n", llink.frame[i]);
+  }
+  return res;
+}
+
 char* getPort(int port) {
   char* path = malloc(10);
   switch (port) {
@@ -264,7 +273,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
 
     // Send I packet
     tcflush(app.fileDescriptor, TCIOFLUSH);
-    res = write(fd, llink.frame, llink.frame_size);
+    res = writepacket(fd);
 
     // printf("STATE: %d\n", state);
 
@@ -277,7 +286,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
       // printf("STATE: %d\n", state);
     }
     alarm(0);
-    printf("fiz o packet\n");
+    // printf("fiz o packet\n");
 
     bcc = buf[3];
 
@@ -300,7 +309,6 @@ int llwrite(int fd, unsigned char* buffer, int length) {
       case REJ:
         // res = write(fd, llink.frame, llink.frame_size);
         printf("Got rejected %d\n ",llink.sequenceNumber);
-        counter++;
         continue;
       default:
         return -1;
@@ -329,7 +337,7 @@ int llread(int fd, unsigned char* buffer) {
     int i = 0;
     int disc = 0;  // bool to see if it received a DISC packet
     unsigned char header[5];
-    unsigned char buf[MAXFRAMESIZE*2];
+    unsigned char buf[MAX_FRAME_SIZE];
     unsigned char* data_packet = malloc(1);
     int res, bcc_correct;
     states state = START;
@@ -342,7 +350,7 @@ int llread(int fd, unsigned char* buffer) {
     printf("vou ler\n");
     for (i = 0; state != STOP; i++) {
       // printf("%d\n", state);
-      if(i == MAXFRAMESIZE)
+      if(i == MAX_FRAME_SIZE)
         break;
       res = read(fd, &buf[i], 1);
       printf("BYTE: %#x\n", buf[i]);

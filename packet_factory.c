@@ -125,13 +125,11 @@ void makeRR(unsigned char* RRarr, int s) {
 void makePacket(const unsigned char* data_field,
                 size_t size,
                 int sequence_number) {
-  unsigned char packet[size * 3];
-  unsigned char aux_array[size * 2];
+  unsigned char packet[MAX_DATA_PACKET_SIZE];
+  unsigned char aux_array[MAX_DATA_PACKET_SIZE];
   int res = 0;
   int stf_size;
   unsigned char bcc2_aux[2];
-
-  bzero(packet, size * 3);
 
   // Header
   packet[0] = FLAG_OCT;
@@ -154,9 +152,6 @@ void makePacket(const unsigned char* data_field,
     printf("bcc2:%#x bcc2:%#x size:%d\n", bcc2_aux[0], bcc2_aux[1], stf_size);
   memcpy(packet + res, aux_array, stf_size);
   res += stf_size;
-
-  // char flag[BYTE_LEN] = {FLAG_OCT};
-  // memcpy(packet + res, flag, BYTE_LEN);
   packet[res] = FLAG_OCT;
   res++;
 

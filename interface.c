@@ -187,7 +187,6 @@ void llopenR(int fd) {
          (A_SND ^ C_SET)))  // Verifies if the sender's BCC is not valid
     {
       bzero(buf, 5);
-      counter++;
       continue;
     }
 
@@ -224,6 +223,7 @@ void llopenT(int fd) {
     // Receive UA
     alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++) {
+      i = (state == START) ? 0 : i;
       res = read(fd, &buf[i], 1);
       advance_state_UA(buf[i], &state);
     }
@@ -233,7 +233,6 @@ void llopenT(int fd) {
         (buf[3] != (A_RCV ^ C_UA)))  // verifies if receiver's Bcc is not valid
     {
       bzero(buf, 5);
-      counter++;
       continue;
     }
 
@@ -271,6 +270,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
     // Receive RR or REJ
     alarm(llink.timeout);
     for (i = 0; state != STOP; i++) {
+      i = (state == START) ? 0 : i;
       res = read(fd, &buf[i], 1);
       advance_state_RR(buf[i], &state);
     }
@@ -281,7 +281,6 @@ int llwrite(int fd, unsigned char* buffer, int length) {
     // Check BCC
     if (buf[3] != (buf[2] ^ buf[1]))  // verifies if receveir's Bcc is not valid
     {
-      counter++;
       continue;
     }
 
@@ -315,10 +314,6 @@ int llread(int fd, unsigned char* buffer) {
   counter = 0;
   // printf("ola\n");
   while (1) {
-    if (counter == llink.numTransmissions) {
-      perror("Exceeded max number of tries. Exiting");
-      exit(-1);
-    }
     int packet_size = 0;
     int i = 0;
     int disc = 0;  // bool to see if it received a DISC packet
@@ -333,6 +328,7 @@ int llread(int fd, unsigned char* buffer) {
     int destuf_buf_size = 0;
     // Read packet
     for (i = 0; state != STOP; i++) {
+      i = (state == START) ? 0 : i;
       if(i == MAX_FRAME_SIZE)
         break;
       res = read(fd, &buf[i], 1);
@@ -370,7 +366,6 @@ int llread(int fd, unsigned char* buffer) {
         // send REJ
         makeREJ(header, !llink.sequenceNumber);
         res = write(fd, header, 5);
-        counter++;
         continue;
       }
       res = write(fd, header, 5);
@@ -419,15 +414,15 @@ void llcloseT(int fd, int flag) {
     // WAIT FOR DISC
     alarm(llink.timeout);
     for (unsigned int i = 0; disc_state != STOP; i++) {
+      i = (disc_state == START) ? 0 : i;
       res = read(fd, &buffer[i], 1);
       advance_state_DISC(buffer[i], &disc_state);
     }
     alarm(0);
 
     // if message is corrupted
-    if ((buffer[1] ^ buffer[2]) != (A_RCV ^ C_DISC)) {
+    if ((buffer[1] ^ buffer[2]) != (buffer[3])) {
       bzero(buffer, 5);
-      counter++;
       continue;
     }
 
@@ -459,15 +454,15 @@ void llcloseR(int fd, int flag) {
     }
     alarm(llink.timeout);
     for (unsigned int i = 0; ua_state != STOP; i++) {
+      i = (ua_state == START) ? 0 : i;
       res = read(fd, &buffer[i], 1);
       advance_state_UA_DISC(buffer[i], &ua_state);
     }
     alarm(0);
     printf("sai\n");
 
-    if ((buffer[1] ^ buffer[2]) == (A_SND ^ C_UA)) {
+    if ((buffer[1] ^ buffer[2]) != (buffer[3])) {
       bzero(buffer, 5);
-      counter++;
       continue;
     }
 

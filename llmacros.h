@@ -25,11 +25,16 @@
 #define FLAG_OCT 0x7E
 #define FLAG_STF  0x5E
 
+
 #define TRANSMITTER 0
 #define RECEIVER 1
 
 #define MAX_FRAME_SIZE 512
-#define MAX_DATA_PACKET_SIZE (MAX_FRAME_SIZE - 6) 
+#define MAX_DATA_PACKET_SIZE (MAX_FRAME_SIZE - 6)
+#define BAUDRATE B9600
+#define _POSIX_SOURCE 1 /* POSIX compliant source */
+#define FALSE 0
+#define TRUE 1
 
 typedef enum
 {

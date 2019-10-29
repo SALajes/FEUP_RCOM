@@ -20,9 +20,6 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  //perguntar ao utilizador o nome do ficheiro a enviar
-  char file_name[13] = "ola.txt";
-
   applicationLayerSender(atoi(argv[1]), argv[2]);
 
 

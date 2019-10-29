@@ -1,7 +1,6 @@
 #ifndef APPLAYER
 #define APPLAYER
 
-#define MAXFRAMESIZE 200
 #include <stdio.h>
 #include "llmacros.h"
 #define APP_C_DATA 1
@@ -22,12 +21,6 @@ typedef struct
     int file_size;
 } appLayer;
 
-typedef struct 
-{
-  int length;
-  unsigned char* value[MAX_DATA_PACKET_SIZE];
-  int sequence_number;
-} appDataPacket;
 
 int applicationLayerSender(int port, char *file_name);
 int applicationLayerReceiver(int port);

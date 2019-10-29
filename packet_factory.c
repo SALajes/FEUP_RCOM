@@ -87,7 +87,7 @@ int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc) {
     new_bcc = new_bcc ^ data_field[i];
   }
 
-  printf("Bcc: %d %#x new %#x\n", new_bcc == bcc, bcc, new_bcc);
+  // printf("Bcc: %d %#x new %#x\n", new_bcc == bcc, bcc, new_bcc);
   return new_bcc == bcc;
 }
 

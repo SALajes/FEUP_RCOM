@@ -50,7 +50,7 @@ int writepacket(int fd){
   int res = 0;
   for (size_t i = 0; i < llink.frame_size; i++) {
     res += write(fd, llink.frame + i, 1);
-    printf("BYTE: %#x\n", llink.frame[i]);
+    // printf("BYTE: %#x\n", llink.frame[i]);
   }
   return res;
 }
@@ -175,15 +175,10 @@ void llopenR(int fd) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-
-    // printf("STATE: %d\n", state);
-
-    // alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++) {
+      i = (state == START) ? 0 : i;
       res = read(fd, &buf[i], 1);
-      // printf("BYTE: %#x\n", buf[i]);
       advance_state_SET(buf[i], &state);
-      // printf("STATE: %d\n", state);
     }
     alarm(0);
 
@@ -230,9 +225,7 @@ void llopenT(int fd) {
     alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
-      // printf("BYTE: %#x\n", buf[i]);
       advance_state_UA(buf[i], &state);
-      // printf("STATE: %d\n", state);
     }
     alarm(0);
 
@@ -275,18 +268,13 @@ int llwrite(int fd, unsigned char* buffer, int length) {
     tcflush(app.fileDescriptor, TCIOFLUSH);
     res = writepacket(fd);
 
-    // printf("STATE: %d\n", state);
-
     // Receive RR or REJ
     alarm(llink.timeout);
     for (i = 0; state != STOP; i++) {
       res = read(fd, &buf[i], 1);
-      // printf("BYTE: %#x\n", buf[i]);
       advance_state_RR(buf[i], &state);
-      // printf("STATE: %d\n", state);
     }
     alarm(0);
-    // printf("fiz o packet\n");
 
     bcc = buf[3];
 
@@ -307,8 +295,6 @@ int llwrite(int fd, unsigned char* buffer, int length) {
         }
         break;
       case REJ:
-        // res = write(fd, llink.frame, llink.frame_size);
-        printf("Got rejected %d\n ",llink.sequenceNumber);
         continue;
       default:
         return -1;
@@ -327,7 +313,7 @@ funçao receivedDISCframeRCV
 */
 int llread(int fd, unsigned char* buffer) {
   counter = 0;
-  printf("ola\n");
+  // printf("ola\n");
   while (1) {
     if (counter == llink.numTransmissions) {
       perror("Exceeded max number of tries. Exiting");
@@ -342,18 +328,15 @@ int llread(int fd, unsigned char* buffer) {
     int res, bcc_correct;
     states state = START;
     unsigned char bcc2 = 0;
-    // bzero(buf, MAXFRAMESIZE * 3);
 
     packet_size = 0;
     int destuf_buf_size = 0;
     // Read packet
-    printf("vou ler\n");
     for (i = 0; state != STOP; i++) {
-      // printf("%d\n", state);
       if(i == MAX_FRAME_SIZE)
         break;
       res = read(fd, &buf[i], 1);
-      printf("BYTE: %#x\n", buf[i]);
+      // printf("BYTE: %#x\n", buf[i]);
       advance_state_I(buf[i], &state, &disc);
       // printf("STATE: %d %d\n", state, disc);
       if (state == DATA_R) {
@@ -364,26 +347,19 @@ int llread(int fd, unsigned char* buffer) {
       }
     }
 
-    printf("packet size %d\n", packet_size);
+    // printf("packet size %d\n", packet_size);
 
-    printf("ja li\n");
+    // printf("ja li\n");
     unsigned char destuf_buf[packet_size];
     if (disc) {
       llcloseR(fd, RECEIVER);
-      // printf("ola encontrei um disc :)\n");
       return 0;
     }
     else {
       destuf_buf_size = destuffing(data_packet, packet_size, destuf_buf);
-      for (size_t i = 0; i < destuf_buf_size; i++)
-      {
-        printf("desBYTE: %#x\n", destuf_buf[i]);
-      }
 
-      printf("receber bcc %d  %d\n", packet_size, destuf_buf_size);
+      // printf("receber bcc %d  %d\n", packet_size, destuf_buf_size);
       bcc2 = destuf_buf[destuf_buf_size - 1];
-
-      printf("testar bcc\n");
       bcc_correct = checkBcc2(destuf_buf, destuf_buf_size - 1, bcc2);
 
     // Checks if bcc2 is correct
@@ -392,18 +368,13 @@ int llread(int fd, unsigned char* buffer) {
         makeRR(header, !llink.sequenceNumber);
       } else {
         // send REJ
-        printf("Rejected %d\n ", !llink.sequenceNumber);
         makeREJ(header, !llink.sequenceNumber);
         res = write(fd, header, 5);
         counter++;
         continue;
       }
-
-      printf("mandei o rr ou rej\n");
       res = write(fd, header, 5);
       memcpy(buffer, destuf_buf, destuf_buf_size - 1);
-      printf("copiei mem\n");
-
       llink.sequenceNumber = !llink.sequenceNumber;
       free(data_packet);
       return (bcc_correct) ? destuf_buf_size : -1;
@@ -466,7 +437,6 @@ void llcloseT(int fd, int flag) {
 
   // SEND UA
   printf("Sending UA\n");
-  // memcpy(llink.frame,uaArray,5);
   write(fd, uaArray, 5);
 }
 // Closes RCV function before ending of times and we all pass RCOM
@@ -487,7 +457,6 @@ void llcloseR(int fd, int flag) {
       perror("Exceeded max number of tries. Exiting");
       exit(-1);
     }
-    printf("tou preso\n");
     alarm(llink.timeout);
     for (unsigned int i = 0; ua_state != STOP; i++) {
       res = read(fd, &buffer[i], 1);

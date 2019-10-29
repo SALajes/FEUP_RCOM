@@ -7,27 +7,23 @@
 #include "interface.h"
 #include "llmacros.h"
 
-#define BAUDRATE B9600
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-
 appLayer app;
 linkLayer llink;
+
+
 
 void processControlpacket(unsigned char* packet);
 void processDatapacket(unsigned char* packet, int file);
 
-unsigned int makeDataPacket(FILE* file) {
+unsigned int makeDataPacket(FILE* file, int packet_size) {
   const int header_size = 4;
-  printf("rip aqui\n");
   unsigned char data[MAX_DATA_PACKET_SIZE];
   unsigned char* it = data;
   int size = fread(data + header_size, sizeof(unsigned char),
-                   256, file);
+                   (!packet_size) ? MAX_FRAME_SIZE/2 - 4 : packet_size, file); // if packet size is 0, use the max size for packet
   *it = APP_C_DATA;
   it++;
-  *it = (unsigned char)((app.lastchunk + 1) % 255);
+  *it = (unsigned char)(app.lastchunk);
   it++;
   int L1 = size / 256;
   int L2 = size % 256;
@@ -43,7 +39,7 @@ unsigned int makeControlPacket(char* file_name, FILE* file, int control_byte) {
   // tamanho do ficheiro
   unsigned char* control_packet;
   unsigned int size = 0;
-  char useless_buffer[256];
+  char useless_buffer[1];
 
   while (!feof(file)) {
     size += fread(useless_buffer, sizeof(unsigned char), 1, file);
@@ -81,6 +77,7 @@ unsigned int makeControlPacket(char* file_name, FILE* file, int control_byte) {
   it++;
   memcpy(it, V2, L2);
   memcpy(app.packet, control_packet, L2 + L1 + 5);
+  free(control_packet);
   return L2 + L1 + 5;
 }
 
@@ -106,9 +103,12 @@ int applicationLayerSender(int port, char* file_name) {
   llwrite(app.fileDescriptor, (unsigned char*)app.packet, controlp_size);
   while (!feof(file)) {
     app.packet[0] = 0;
-    controlp_size = makeDataPacket(file);
+    controlp_size = makeDataPacket(file,0);
+    if(controlp_size == 0){
+      break;
+    }
+    printf("Mandei packet %d com tamanho %d\n", app.lastchunk, controlp_size);
     llwrite(app.fileDescriptor, (unsigned char*)app.packet, controlp_size);
-    printf("Mandei packet %d com tamanho %d", app.lastchunk, controlp_size);
     app.lastchunk++;
     app.lastchunk %= 255;
   }
@@ -124,7 +124,7 @@ int applicationLayerReceiver(int port) {
   FILE* file;
   int file_fd;
   int packet_size = 0;
-  app.lastchunk = 0;
+  app.lastchunk = 255;
   llink.baudRate = BAUDRATE;
   llink.timeout = 2;
   llink.numTransmissions = 3;
@@ -134,12 +134,10 @@ int applicationLayerReceiver(int port) {
 
   while (1) {
     packet_size = llread(app.fileDescriptor, packet);
-    printf("li o %d packet %d \n", app.lastchunk,packet[0]);
     switch (packet[0]) {
       case APP_C_DATA:
         processDatapacket(packet, file_fd);
-        app.lastchunk++;
-        app.lastchunk %= 255;
+        printf("li o %d packet %d \n", app.lastchunk,packet[0]);
         continue;
       case APP_C_START:
         processControlpacket(packet);
@@ -153,7 +151,6 @@ int applicationLayerReceiver(int port) {
     }
 
     if (packet[0] == APP_C_END) {
-      perror("Wrong control byte for app layer packet.");
       break;
     }
   }

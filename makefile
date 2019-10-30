@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc 
 
 SRCS := $(wildcard *.c)
 BINS := $(SRCS:%.c=%)

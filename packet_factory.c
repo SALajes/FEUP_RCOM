@@ -148,8 +148,8 @@ void makePacket(const unsigned char* data_field,
   // packet[res] = 0; // use this to put bcc2 with error
   bcc2_aux[0] = makeBcc(data_field, size);
   stf_size = stuffing(bcc2_aux, 1, aux_array);
-  if (stf_size == 2)
-    printf("bcc2:%#x bcc2:%#x size:%d\n", bcc2_aux[0], bcc2_aux[1], stf_size);
+  // if (stf_size == 2)
+  //   printf("bcc2:%#x bcc2:%#x size:%d\n", bcc2_aux[0], bcc2_aux[1], stf_size);
   memcpy(packet + res, aux_array, stf_size);
   res += stf_size;
   packet[res] = FLAG_OCT;

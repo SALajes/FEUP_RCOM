@@ -392,6 +392,7 @@ int llclose(int fd, int flag) {
 void llcloseT(int fd, int flag) {
   // fd identificador da ligação de dados
   puts("Entered llclose");
+  
   unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
   unsigned char uaArray[5] = {FLAG, A_SND, C_UA, (A_SND ^ C_UA), FLAG};
   unsigned char buffer[MAX_FRAME_SIZE];
@@ -435,6 +436,7 @@ void llcloseT(int fd, int flag) {
 // Closes RCV function before ending of times and we all pass RCOM
 void llcloseR(int fd, int flag) {
   puts("Entered llclose");
+  
   unsigned char buffer[256];
   unsigned char discArray[5] = {FLAG, A_RCV, C_DISC, (A_RCV ^ C_DISC), FLAG};
 

@@ -29,7 +29,7 @@
 #define TRANSMITTER 0
 #define RECEIVER 1
 
-#define MAX_FRAME_SIZE 512
+#define MAX_FRAME_SIZE 715
 #define MAX_DATA_PACKET_SIZE (MAX_FRAME_SIZE - 6)
 #define BAUDRATE B9600
 #define _POSIX_SOURCE 1 /* POSIX compliant source */

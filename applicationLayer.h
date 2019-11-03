@@ -18,7 +18,7 @@ typedef struct
     char file_name[MAX_DATA_PACKET_SIZE];
     FILE* file;
     char packet[MAX_DATA_PACKET_SIZE];
-    int file_size;
+    unsigned long file_size;
 } appLayer;
 
 

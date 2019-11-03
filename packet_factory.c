@@ -87,7 +87,6 @@ int checkBcc2(const unsigned char* data_field, int size, unsigned char bcc) {
     new_bcc = new_bcc ^ data_field[i];
   }
 
-  // printf("Bcc: %d %#x new %#x\n", new_bcc == bcc, bcc, new_bcc);
   return new_bcc == bcc;
 }
 
@@ -145,13 +144,11 @@ void makePacket(const unsigned char* data_field,
   res += stf_size;
 
   // Bcc for data
-  // packet[res] = 0; // use this to put bcc2 with error
   bcc2_aux[0] = makeBcc(data_field, size);
   stf_size = stuffing(bcc2_aux, 1, aux_array);
-  if (stf_size == 2)
-    printf("bcc2:%#x bcc2:%#x size:%d\n", bcc2_aux[0], bcc2_aux[1], stf_size);
   memcpy(packet + res, aux_array, stf_size);
   res += stf_size;
+
   packet[res] = FLAG_OCT;
   res++;
 

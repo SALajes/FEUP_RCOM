@@ -28,7 +28,7 @@ void alarm_handler() {
   tcflush(app.fileDescriptor, TCIOFLUSH);
 
   if (llink.numTransmissions == counter) {
-    printf("Could not connect to receiver. Halting execution...\n");
+    perror("Could not connect to receiver. Halting execution...\n");
     if (tcsetattr(app.fileDescriptor, TCSANOW, &llink.oldPortSettings) == -1) {
       perror("tcsetattr");
       close(app.fileDescriptor);
@@ -50,7 +50,6 @@ int writepacket(int fd){
   int res = 0;
   for (size_t i = 0; i < llink.frame_size; i++) {
     res += write(fd, llink.frame + i, 1);
-    // printf("BYTE: %#x\n", llink.frame[i]);
   }
   return res;
 }
@@ -218,8 +217,6 @@ void llopenT(int fd) {
     // Send SET
     res = write(fd, setArr, 5);
 
-    // printf("STATE: %d\n", state);
-
     // Receive UA
     alarm(llink.timeout);
     for (size_t i = 0; state != STOP; i++) {
@@ -294,6 +291,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
         }
         break;
       case REJ:
+		printf("Reject Packet\n");
         continue;
       default:
         return -1;
@@ -312,7 +310,7 @@ funçao receivedDISCframeRCV
 */
 int llread(int fd, unsigned char* buffer) {
   counter = 0;
-  // printf("ola\n");
+
   while (1) {
     int packet_size = 0;
     int i = 0;
@@ -329,23 +327,23 @@ int llread(int fd, unsigned char* buffer) {
     // Read packet
     for (i = 0; state != STOP; i++) {
       i = (state == START) ? 0 : i;
-      if(i == MAX_FRAME_SIZE)
-        break;
+      if(i == MAX_FRAME_SIZE){
+		makeREJ(header, !llink.sequenceNumber);
+        res = write(fd, header, 5);
+		printf("BCC1 Reject Packet\n");
+        continue;
+	  }
       res = read(fd, &buf[i], 1);
-      // printf("BYTE: %#x\n", buf[i]);
+
       advance_state_I(buf[i], &state, &disc);
-      // printf("STATE: %d %d\n", state, disc);
+
       if (state == DATA_R) {
-        // printf("Sicke");
         data_packet = (unsigned char*)realloc(data_packet, packet_size + 1);
         data_packet[packet_size] = buf[i];
         packet_size++;
       }
     }
 
-    // printf("packet size %d\n", packet_size);
-
-    // printf("ja li\n");
     unsigned char destuf_buf[packet_size];
     if (disc) {
       llcloseR(fd, RECEIVER);
@@ -354,7 +352,6 @@ int llread(int fd, unsigned char* buffer) {
     else {
       destuf_buf_size = destuffing(data_packet, packet_size, destuf_buf);
 
-      // printf("receber bcc %d  %d\n", packet_size, destuf_buf_size);
       bcc2 = destuf_buf[destuf_buf_size - 1];
       bcc_correct = checkBcc2(destuf_buf, destuf_buf_size - 1, bcc2);
 
@@ -366,8 +363,10 @@ int llread(int fd, unsigned char* buffer) {
         // send REJ
         makeREJ(header, !llink.sequenceNumber);
         res = write(fd, header, 5);
+		printf("BCC2 Reject Packet\n");
         continue;
       }
+
       res = write(fd, header, 5);
       memcpy(buffer, destuf_buf, destuf_buf_size - 1);
       llink.sequenceNumber = !llink.sequenceNumber;
@@ -392,7 +391,7 @@ int llclose(int fd, int flag) {
 
 void llcloseT(int fd, int flag) {
   // fd identificador da ligação de dados
-  puts("Entrei no llcloseT");
+  puts("Entered llclose");
   unsigned char discArray[5] = {FLAG, A_SND, C_DISC, A_SND ^ C_DISC, FLAG};
   unsigned char uaArray[5] = {FLAG, A_SND, C_UA, (A_SND ^ C_UA), FLAG};
   unsigned char buffer[MAX_FRAME_SIZE];
@@ -431,12 +430,11 @@ void llcloseT(int fd, int flag) {
   }
 
   // SEND UA
-  printf("Sending UA\n");
   write(fd, uaArray, 5);
 }
 // Closes RCV function before ending of times and we all pass RCOM
 void llcloseR(int fd, int flag) {
-  puts("Entrei no llcloseR");
+  puts("Entered llclose");
   unsigned char buffer[256];
   unsigned char discArray[5] = {FLAG, A_RCV, C_DISC, (A_RCV ^ C_DISC), FLAG};
 
@@ -459,7 +457,6 @@ void llcloseR(int fd, int flag) {
       advance_state_UA_DISC(buffer[i], &ua_state);
     }
     alarm(0);
-    printf("sai\n");
 
     if ((buffer[1] ^ buffer[2]) != (buffer[3])) {
       bzero(buffer, 5);

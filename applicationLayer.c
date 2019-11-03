@@ -11,7 +11,6 @@ appLayer app;
 linkLayer llink;
 
 
-
 void processControlpacket(unsigned char* packet);
 void processDatapacket(unsigned char* packet, int file);
 
@@ -99,21 +98,29 @@ int applicationLayerSender(int port, char* file_name) {
   llopen(port, TRANSMITTER);
   // Make and Write Control Packet
   controlp_size = makeControlPacket(file_name, file, APP_C_START);
-  // printf("mandei control%d\n", controlp_size);
+
   llwrite(app.fileDescriptor, (unsigned char*)app.packet, controlp_size);
+	
+	printf("Started file transmission\n");
+
   while (!feof(file)) {
     app.packet[0] = 0;
     controlp_size = makeDataPacket(file,0);
     if(controlp_size == 0){
       break;
     }
-    printf("Mandei packet %d com tamanho %d\n", app.lastchunk, controlp_size);
+
+	printf("Mandei packet %d\n", app.lastchunk);
+
     llwrite(app.fileDescriptor, (unsigned char*)app.packet, controlp_size);
     app.lastchunk++;
     app.lastchunk %= 255;
   }
 
   controlp_size = makeControlPacket(file_name, file, APP_C_END);
+
+	printf("Ended file transmission\n");
+
   llwrite(app.fileDescriptor, app.packet, controlp_size);
 
   return llclose(app.fileDescriptor, TRANSMITTER);
@@ -137,12 +144,12 @@ int applicationLayerReceiver(int port) {
     switch (packet[0]) {
       case APP_C_DATA:
         processDatapacket(packet, file_fd);
-        printf("li o %d packet %d \n", app.lastchunk,packet[0]);
-        continue;
+		printf("li o %d\n", app.lastchunk);        
+		continue;
       case APP_C_START:
         processControlpacket(packet);
-        // file = fopen(app.file_name, "w+");
-        file = fopen("result.gif", "w+");
+        file = fopen(app.file_name, "w+");
+        //file = fopen("result.gif", "w+");
         file_fd = fileno(file);
         app.file = file;
         continue;

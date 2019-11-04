@@ -3,10 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "interface.h"
 #include "llmacros.h"
 #include "progressbar.h"
+
+int flag=1, conta=1;
+
+void atende()                   // atende alarme
+{
+	printf("alarme # %d\n", conta);
+	flag=1;
+	conta++;
+}
+
 
 appLayer app;
 linkLayer llink;
@@ -130,9 +141,14 @@ int applicationLayerSender(int port, char *file_name)
     {
       break;
     }
-
+    (void) signal(SIGALRM, atende);
+    while(conta < 4) {
+        if (flag) {
+            alarm(1);
+            flag=0;
+        }
+    }
     printf("Mandei packet %d\n", app.lastchunk);
-
     size += llwrite(app.fileDescriptor, (unsigned char *)app.packet, controlp_size);
     
     app.lastchunk++;

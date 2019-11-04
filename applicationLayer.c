@@ -10,6 +10,7 @@
 
 appLayer app;
 linkLayer llink;
+extern unsigned long byte_counter;
 
 void processControlpacket(unsigned char *packet);
 void processDatapacket(unsigned char *packet, int file);
@@ -121,6 +122,13 @@ int applicationLayerSender(int port, char *file_name)
   progressbar *transfer = progressbar_new("Transfer", total_size / 255);
 	
 	printf("Started file transmission\n");
+    
+    byte_counter = 0;
+
+ double elapsedTime = 0;
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME,&start);
+  
 
   while (!feof(file))
   {
@@ -131,7 +139,7 @@ int applicationLayerSender(int port, char *file_name)
       break;
     }
 
-    printf("Mandei packet %d\n", app.lastchunk);
+    //printf("Mandei packet %d\n", app.lastchunk);
 
     size += llwrite(app.fileDescriptor, (unsigned char *)app.packet, controlp_size);
     
@@ -140,6 +148,13 @@ int applicationLayerSender(int port, char *file_name)
     progressbar_inc(transfer);
   }
 
+ clock_gettime(CLOCK_REALTIME, &end);
+
+    elapsedTime += (end.tv_sec - start.tv_sec);
+    elapsedTime += (end.tv_nsec - start.tv_nsec)/1000000000.0;
+
+  printf("Transfer elapsed time: %f seconds\n", elapsedTime);
+    printf("Number of bytes transfered %lu\n", byte_counter);
   progressbar_finish(transfer);
 
   controlp_size = makeControlPacket(file_name, file, APP_C_END);

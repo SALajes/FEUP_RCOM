@@ -29,12 +29,13 @@
 #define TRANSMITTER 0
 #define RECEIVER 1
 
-#define MAX_FRAME_SIZE 715
+#define MAX_FRAME_SIZE 2048
 #define MAX_DATA_PACKET_SIZE (MAX_FRAME_SIZE - 6)
-#define BAUDRATE B9600
+#define BAUDRATE B57600
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define TPROP 20000
 
 typedef enum
 {

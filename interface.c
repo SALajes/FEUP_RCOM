@@ -18,6 +18,7 @@
 extern appLayer app;
 extern linkLayer llink;
 int counter = 0;
+unsigned long byte_counter = 0;
 
 void llopenT(int fd);
 void llopenR(int fd);
@@ -262,6 +263,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
 
     // Send I packet
     tcflush(app.fileDescriptor, TCIOFLUSH);
+    usleep(TPROP);    
     res = writepacket(fd);
 
     // Receive RR or REJ
@@ -269,7 +271,8 @@ int llwrite(int fd, unsigned char* buffer, int length) {
     for (i = 0; state != STOP; i++) {
       i = (state == START) ? 0 : i;
       res = read(fd, &buf[i], 1);
-      advance_state_RR(buf[i], &state);
+        byte_counter++;      
+        advance_state_RR(buf[i], &state);
     }
     alarm(0);
 
@@ -328,11 +331,12 @@ int llread(int fd, unsigned char* buffer) {
     for (i = 0; state != STOP; i++) {
       i = (state == START) ? 0 : i;
       if(i == MAX_FRAME_SIZE){
-		makeREJ(header, !llink.sequenceNumber);
+		makeREJ(header, !llink.sequenceNumber);       
         res = write(fd, header, 5);
 		printf("BCC1 Reject Packet\n");
         continue;
 	  }
+        byte_counter++;
       res = read(fd, &buf[i], 1);
 
       advance_state_I(buf[i], &state, &disc);

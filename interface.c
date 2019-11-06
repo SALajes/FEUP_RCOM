@@ -10,6 +10,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <stdbool.h>
+
 #include "applicationLayer.h"
 #include "llmacros.h"
 #include "packet_factory.h"
@@ -18,7 +20,7 @@
 extern appLayer app;
 extern linkLayer llink;
 int counter = 0;
-unsigned long byte_counter = 0;
+bool fail = false;
 
 void llopenT(int fd);
 void llopenR(int fd);
@@ -270,8 +272,7 @@ int llwrite(int fd, unsigned char* buffer, int length) {
     alarm(llink.timeout);
     for (i = 0; state != STOP; i++) {
       i = (state == START) ? 0 : i;
-      res = read(fd, &buf[i], 1);
-        byte_counter++;      
+      res = read(fd, &buf[i], 1);  
         advance_state_RR(buf[i], &state);
     }
     alarm(0);
@@ -330,13 +331,13 @@ int llread(int fd, unsigned char* buffer) {
     // Read packet
     for (i = 0; state != STOP; i++) {
       i = (state == START) ? 0 : i;
-      if(i == MAX_FRAME_SIZE){
+      if(i == MAX_FRAME_SIZE || fail){
 		makeREJ(header, !llink.sequenceNumber);       
         res = write(fd, header, 5);
 		printf("BCC1 Reject Packet\n");
+        fail = false;
         continue;
 	  }
-        byte_counter++;
       res = read(fd, &buf[i], 1);
 
       advance_state_I(buf[i], &state, &disc);
@@ -360,7 +361,15 @@ int llread(int fd, unsigned char* buffer) {
       bcc_correct = checkBcc2(destuf_buf, destuf_buf_size - 1, bcc2);
 
     // Checks if bcc2 is correct
-      if (bcc_correct) {
+        if(fail){
+        // send REJ
+        makeREJ(header, !llink.sequenceNumber);
+        res = write(fd, header, 5);
+		printf("BCC2 Reject FAIL FLAG Packet\n");
+        fail = false;
+        continue;
+}
+      else if (bcc_correct) {
         // send RR
         makeRR(header, !llink.sequenceNumber);
       } else {

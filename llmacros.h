@@ -35,7 +35,8 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
-#define TPROP 20000
+#define TPROP 1000
+#define FER 500
 
 typedef enum
 {

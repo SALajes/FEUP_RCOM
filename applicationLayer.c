@@ -7,10 +7,12 @@
 #include "interface.h"
 #include "llmacros.h"
 #include "progressbar.h"
+#include <stdbool.h>
 
 appLayer app;
 linkLayer llink;
-extern unsigned long byte_counter;
+unsigned long frame_counter = 0;
+extern bool fail;
 
 void processControlpacket(unsigned char *packet);
 void processDatapacket(unsigned char *packet, int file);
@@ -91,6 +93,8 @@ long getFileSize(FILE *fp)
   fseek(fp, 0L, SEEK_END);
   long sz = ftell(fp);
   rewind(fp);
+
+    printf("file size: %ld\n", sz);
   return sz;
 }
 
@@ -123,7 +127,7 @@ int applicationLayerSender(int port, char *file_name)
 	
 	printf("Started file transmission\n");
     
-    byte_counter = 0;
+    frame_counter = 0;
 
  double elapsedTime = 0;
     struct timespec start, end;
@@ -142,19 +146,23 @@ int applicationLayerSender(int port, char *file_name)
     //printf("Mandei packet %d\n", app.lastchunk);
 
     size += llwrite(app.fileDescriptor, (unsigned char *)app.packet, controlp_size);
+
+    frame_counter++;
     
     app.lastchunk++;
     app.lastchunk %= 255;
     progressbar_inc(transfer);
   }
 
+frame_counter = 0;
  clock_gettime(CLOCK_REALTIME, &end);
 
     elapsedTime += (end.tv_sec - start.tv_sec);
     elapsedTime += (end.tv_nsec - start.tv_nsec)/1000000000.0;
 
+
   printf("Transfer elapsed time: %f seconds\n", elapsedTime);
-    printf("Number of bytes transfered %lu\n", byte_counter);
+
   progressbar_finish(transfer);
 
   controlp_size = makeControlPacket(file_name, file, APP_C_END);
@@ -182,6 +190,10 @@ int applicationLayerReceiver(int port)
 
   while (1)
   {
+if(frame_counter == FER){
+                fail = true;   
+    frame_counter = 0; 
+            }
     packet_size = llread(app.fileDescriptor, packet);
     switch (packet[0]) {
       case APP_C_DATA:

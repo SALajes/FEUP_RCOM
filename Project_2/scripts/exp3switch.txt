@@ -1,0 +1,37 @@
+enable 
+
+configure terminal 
+vlan y0
+end 
+
+configure terminal 
+vlan y1
+end 
+
+#Tux1 ligado na port 1 da switch
+configure terminal
+interface fastethernet 0/1
+switchport mode access
+switchport access vlan y0
+end
+
+#Tux4 ligado na port 2 da switch
+configure terminal
+interface fastethernet 0/2
+switchport mode access
+switchport access vlan y0
+end
+
+#Tux2 ligado na port 13 da switch
+configure terminal
+interface fastethernet 0/13
+switchport mode access
+switchport access vlan y1
+end
+
+#Tux4 ligado na port 15 da switch
+configure terminal
+interface fastethernet 0/15
+switchport mode access
+switchport access vlan y1
+end

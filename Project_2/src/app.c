@@ -12,14 +12,6 @@ int main(int argc, char* argv[]) {
     char* user = NULL, password = NULL, host = NULL, path = NULL, file = NULL, ip = NULL;
 
     parseURL(argv[1], &user, &password, &host, &path, &file);
-    
-    if (hostname_to_ip(host, &ip) != 0) {
-        exit(2);
-    }
-
-    if (transfer_file(user, password, ip, path, file) != 0) {
-        exit(3);
-    }
 
     free(user);
     free(password);

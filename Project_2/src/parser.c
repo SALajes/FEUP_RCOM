@@ -11,8 +11,8 @@ int checkURLheader(char *url) {
     // they are the same as the header
     if (strncmp(url, header, 6) == 0) return 0;
     else {
-        puts("URL header incorrect (should be ftp://");
-        return (-1);
+        puts("URL header incorrect (should be ftp://)\n");
+        exit(-1);
     }
 } 
 
@@ -21,6 +21,10 @@ int checkURLheader(char *url) {
  * Returns the index of the ':' char.
  */
 int checkUser(char *url) {
+    if (strlen(url) < 6) {
+        puts("URL not valid");
+        exit(-10);
+    }
     // Username starts after ftp://, that is, on index 6
     int userStartIndex = 6;
     // Counter for the number of chars that are part of the username
@@ -28,10 +32,9 @@ int checkUser(char *url) {
     for (unsigned int i = userStartIndex; url[i] != ':'; i++) {
         counter++;
     }
-    // If username not declared, return with error code
+    // If username not declared, return special -90 value
     if (counter <= 0) {
-        puts("Tá mal");
-        return -2;
+        return -90;
     }
     return userStartIndex + counter;
 }
@@ -42,20 +45,19 @@ int checkUser(char *url) {
  */
 int checkPassword(char *url, int startIndex) {
     int counter = 0;
-    
+
     if (url[startIndex - 1] != ':') {
-        puts("Username and password must be separated with ':' char");
-        return -3;
+        puts("Username and password must be separated with ':' char\n");
+        exit(-3);
     }
     
     for (unsigned int i = startIndex; url[i] != '@'; i++) {
         counter++;
     }
     
-    // If username not declared, return with error code
+    // If username not declared, return special -91 value
     if (counter <= 0) {
-        puts("Username not declared");
-        return -2;
+        return -91;
     }
 
     return counter;
@@ -66,16 +68,17 @@ int checkPassword(char *url, int startIndex) {
  * Returns index of the '/' character on success.
  */
 int checkHost(const char* url, int startIndex) {
-    int i, url_length = strlen(url), hostDeclared = 0;
+    int i, url_length = strlen(url), hostDeclared = 0, count = 0;
     for (i = startIndex; i < url_length; ++i) {
+        count++;
         if (url[i] == '/') {
             hostDeclared = 1;
             break;
         }
     }
 
-    if (!hostDeclared) {
-        printf("No host declared in the URL");
+    if ((hostDeclared == 0 && count == 0) || (hostDeclared == 1 && count == 0)) {
+        printf("No host declared in the URL\n");
         exit(-4);
     }
 
@@ -89,19 +92,22 @@ int checkPath(const char* url, int startIndex) {
     }
 
     if (counter == 0) {
-        printf("No path declared in the URL");
+        printf("No path declared in the URL\n");
         exit(-5);
     }
 
     return i;
 }
 
-char* getFileName(char* path) {
-    int i = strlen(path);
-    for (i = i - 1; path[i] != '/'; i--);
-    char* file = strndup(path + i + 1, strlen(path) - 1);
-
-    return file;
+int getFileNameIndex(char* path) {
+    const size_t str_size = strlen(path);
+    size_t i = str_size;
+    for (; i > 0; --i) {
+        if (path[i] == '/') {
+            return i + 1;
+        }
+    }
+    return 0;
 }
 
 /**
@@ -111,22 +117,29 @@ char* getFileName(char* path) {
 int parseURL(char* url, char* user, char* password, char* host, char* path, char* file) {
     checkURLheader(url);
     int passwordStartIndex = checkUser(url) + 1; // +1 (char next to ':')
-    int hostStartIndex = passwordStartIndex + checkPassword(url, passwordStartIndex) + 1; // +1 (char next to '@')
+    int hostStartIndex = passwordStartIndex + checkPassword(url, passwordStartIndex) + 1;
     int pathStartIndex = checkHost(url, hostStartIndex) + 1;
     checkPath(url, pathStartIndex);
     user = strndup(url + 6, passwordStartIndex - 7);
     password = strndup(url + passwordStartIndex, hostStartIndex - passwordStartIndex - 1);
     host = strndup(url + hostStartIndex, pathStartIndex - hostStartIndex - 1);
     path = strndup(url+ pathStartIndex, strlen(url) - pathStartIndex - 1);
-    file = getFileName(path);
 
-    printf("%s\n", file);
+    int fileNameIndex = getFileNameIndex(path);
+    if (fileNameIndex == 0) {
+        file = path;
+    }
+    else file = strndup(path + fileNameIndex, strlen(path));
+    if (*file == '\0') {
+        puts("No file declared in the url\n");
+        exit(-5);
+    }
 
     return 0;
 }
 
 int main() {
-    char* url = "ftp://gustus:loucura@feup/sfgdhjf/hbefrghjtrkn/";
+    char* url = "ftp://eergr:loucura@rgtr/rfetg/";
     char* user, password, host, path, file;
     parseURL(url, user, &password, &host, &path, &file);
     return 0;

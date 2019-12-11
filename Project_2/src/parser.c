@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "parser.h"
 
 /**
  * Checks if URL starts with ftp://
@@ -114,23 +115,23 @@ int getFileNameIndex(char* path) {
  * Returns 1 if parse was valid; 0 otherwise.
  */
 //printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
-int parseURL(char* url, char* user, char* password, char* host, char* path, char* file) {
+int parseURL(char* url, struct url * result) {
     checkURLheader(url);
     int passwordStartIndex = checkUser(url) + 1; // +1 (char next to ':')
     int hostStartIndex = passwordStartIndex + checkPassword(url, passwordStartIndex) + 1;
     int pathStartIndex = checkHost(url, hostStartIndex) + 1;
     checkPath(url, pathStartIndex);
-    user = strndup(url + 6, passwordStartIndex - 7);
-    password = strndup(url + passwordStartIndex, hostStartIndex - passwordStartIndex - 1);
-    host = strndup(url + hostStartIndex, pathStartIndex - hostStartIndex - 1);
-    path = strndup(url+ pathStartIndex, strlen(url) - pathStartIndex - 1);
+    result->user = strndup(url + 6, passwordStartIndex - 7);
+    result->password = strndup(url + passwordStartIndex, hostStartIndex - passwordStartIndex - 1);
+    result->host = strndup(url + hostStartIndex, pathStartIndex - hostStartIndex - 1);
+    result->path = strndup(url+ pathStartIndex, strlen(url) - pathStartIndex);
 
-    int fileNameIndex = getFileNameIndex(path);
+    int fileNameIndex = getFileNameIndex(result->path);
     if (fileNameIndex == 0) {
-        file = path;
+        result->file = result->path;
     }
-    else file = strndup(path + fileNameIndex, strlen(path));
-    if (*file == '\0') {
+    else result->file = strndup(result->path + fileNameIndex, strlen(result->path));
+    if (*(result->file) == '\0') {
         puts("No file declared in the url\n");
         exit(-5);
     }
@@ -138,9 +139,6 @@ int parseURL(char* url, char* user, char* password, char* host, char* path, char
     return 0;
 }
 
-int main() {
-    char* url = "ftp://eergr:loucura@rgtr/rfetg/";
-    char* user, password, host, path, file;
-    parseURL(url, user, &password, &host, &path, &file);
+int askforUser(struct url* url){
     return 0;
 }

@@ -35,17 +35,17 @@ then
   IP2="172.16."
   IP2+="${Y}"
   IP2+="1.253/24"
-  ROUTERIP="172.16.${Y}1.254/24"
+  ROUTERIP="172.16.${Y}1.254"
   ifconfig eth1 up
   ifconfig eth1 $IP2
   echo 1 > /proc/sys/net/ipv4/ip_forward
   echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
-  route add default gw $ROUTERIP eth0
+  route add default gw $ROUTERIP eth1
 elif [ $PC -eq 2 ]
 then 
   IP="172.16."
   IP+="${Y}0.0/24"
-  ROUTERIP="172.16.${Y}${SUB}253/24"
+  ROUTERIP="172.16.${Y}${SUB}253"
   route add default gw $ROUTERIP eth0
   echo 0 > /proc/sys/net/ipv4/conf/eth0/accept_redirects
   echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects

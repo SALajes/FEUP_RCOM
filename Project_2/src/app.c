@@ -24,9 +24,15 @@ int main(int argc, char* argv[]) {
 
   url.ext.port = 21;
 
-  printf("%s\n", argv[1]);
-
   parseURL(argv[1], &url);
+
+  printf("URL parsed\n");
+  printf("User: %s\n", url.user);
+    printf("pass: %s\n", url.password);
+  printf("host: %s\n", url.host);
+  printf("path: %s\n", url.path);
+  printf("file: %s\n", url.file);
+
 
   getIP(&url);
 

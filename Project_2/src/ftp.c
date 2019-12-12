@@ -64,7 +64,7 @@ int connectHost(struct ftp* ftp, struct url * url){
     int fd;
     char str[STR_LEN];
 
-    fd = connectSocket(url->ext);
+    fd = connectSocket(&(url->ext));
 
     ftp->control_fd = fd;
     

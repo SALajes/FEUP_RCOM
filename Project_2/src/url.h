@@ -1,6 +1,12 @@
 #ifndef _URL_H
 #define _URL_H
 
+struct ext
+{
+    char* ip;
+    int port;
+};
+
 struct url
 {
     char* user;
@@ -8,14 +14,9 @@ struct url
     char* host;
     char* path;
     char* file;
-    struct ext * ext;
+    struct ext ext;
 };
 
-struct ext
-{
-    char* ip;
-    int port;
-};
 
 #define SUCCESS 0
 #define FAIL    1

@@ -21,28 +21,29 @@ int main(int argc, char* argv[]) {
         exit(FAIL);
     }
 
-    struct url * url = malloc(sizeof(struct url));
-    url->ext->port = 21;
+    struct url url;
 
-    parseURL(argv[1], url);
+    url.ext.port = 21;
+
+    printf("%s\n", argv[1]);
+
+    parseURL(argv[1], &url);
 
 // TO DO: TRATAR DO ANONIMOUS
     // if(url->user == NULL)
     //     askforUser(url);   
 
-    getIP(url);
+    getIP(&url);
 
     //FTP
     struct ftp* ftp;
 
-    connectHost(ftp, url);
-    loginUser(ftp, url);
-    changeDirectory(ftp, url);
+    connectHost(ftp, &url);
+    loginUser(ftp, &url);
+    changeDirectory(ftp, &url);
     passiveMode(ftp);
-    download(ftp, url);
+    download(ftp, &url);
     disconnect(ftp);
-
-    free(url);
 
     return 0;
 }
@@ -57,7 +58,7 @@ void getIP(struct url* url){
 
     char * aux = inet_ntoa(*((struct in_addr *) h->h_addr_list[0]));
 
-    url->ext->ip = malloc(strlen(aux) + 1);
+    url->ext.ip = malloc(strlen(aux) + 1);
 
-    memcpy(url->ext->ip, aux, strlen(aux));
+    memcpy(url->ext.ip, aux, strlen(aux));
 }

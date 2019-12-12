@@ -13,13 +13,13 @@
 
 int connectSocket(struct ext * ext){
     int fd;
-    struct sockaddr_in *server_address = malloc(sizeof(*server_address));
+    struct sockaddr_in server_address;
 
     puts(ext->ip);
-    bzero((char*)server_address, sizeof(struct sockaddr_in));
-    server_address->sin_family = AF_INET;
-    server_address->sin_addr.s_addr = inet_addr(ext->ip);
-    server_address->sin_port = htons(ext->port);
+    bzero((char*) &server_address, sizeof(struct sockaddr_in));
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = inet_addr(ext->ip);
+    server_address.sin_port = htons(ext->port);
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -28,13 +28,13 @@ int connectSocket(struct ext * ext){
         exit(FAIL);
     }
 
-    if (server_address->sin_addr.s_addr == -1){
+    if (server_address.sin_addr.s_addr == -1){
       printf("Ip conversion error");
       exit(-1);
     }
 
-    printf("vou conectar me a %d\n", server_address->sin_addr.s_addr);
-    if (connect(fd, (struct sockaddr*)server_address, sizeof(struct sockaddr)) <
+    printf("vou conectar me a %d\n", server_address.sin_addr.s_addr);
+    if (connect(fd, (struct sockaddr*)&server_address, sizeof(struct sockaddr)) <
         0) {
       perror("Failed to connect");
       exit(FAIL);
@@ -63,7 +63,7 @@ int readFromSocket(struct ftp* ftp, char*str, size_t size){
             perror("Failed to read from socket");
             exit(FAIL);
         }
-    }while(!(str[0] >= '1' && str[0] <= '5') || str[3] != ' ');
+    }while(str[0] < '1' && str[0] > '5' || str[3] != ' ');
 
     return SUCCESS;
 }
@@ -74,6 +74,7 @@ int connectHost(struct ftp* ftp, struct url * url){
     fd = connectSocket(&(url->ext));
 
     ftp->control_fd = fd;
+    ftp->data_fd = 0;
     
     readFromSocket(ftp, str, STR_LEN);
 
@@ -83,9 +84,10 @@ int connectHost(struct ftp* ftp, struct url * url){
 int loginUser(struct ftp * ftp, struct url * url){
     char str[STR_LEN];
 
+    printf(" USER %s\n", url->user);
     //username
     sprintf(str, "USER %s\r\n", url->user);
-    writeToSocket(ftp, str, STR_LEN);
+    writeToSocket(ftp, str, strlen(str));
 
     readFromSocket(ftp, str, STR_LEN);
 
@@ -93,9 +95,11 @@ int loginUser(struct ftp * ftp, struct url * url){
 
     //password
     sprintf(str, "PASS %s\r\n", url->password);
-    writeToSocket(ftp, str, STR_LEN);
+    writeToSocket(ftp, str, strlen(str));
 
     readFromSocket(ftp, str, STR_LEN);
+
+    printf("PASSWORD %s\n", url->password);
 
     memset(str, 0, STR_LEN);
 
@@ -112,7 +116,7 @@ int changeDirectory(struct ftp * ftp, struct url * url){
     }
     else if(size > 0){
         sprintf(cwd, "CWD %s\r\n", url->path);
-        writeToSocket(ftp, cwd, STR_LEN);
+        writeToSocket(ftp, cwd, strlen(cwd));
         readFromSocket(ftp, cwd, STR_LEN);
     }  
 
@@ -122,20 +126,26 @@ int changeDirectory(struct ftp * ftp, struct url * url){
 int passiveMode(struct ftp * ftp){
     char passive[STR_LEN];
 
-    writeToSocket(ftp, passive, STR_LEN);
+    sprintf(passive, "PASV\r\n");
+    writeToSocket(ftp, passive, strlen(passive));
+
+    printf("piça ZZZ %s\n", passive);
+    
     readFromSocket(ftp, passive, STR_LEN);
 
-    int ipPart1, ipPart2, ipPart3, ipPart4;
+    printf("piça YYY %s\n", passive);
+
+    int ip1, ip2, ip3, ip4;
 	int port1, port2;
-	if ((sscanf(passive, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)", &ipPart1,&ipPart2, &ipPart3, &ipPart4, &port1, &port2)) < 0) {
+	if ((sscanf(passive, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)", &ip1,&ip2, &ip3, &ip4, &port1, &port2)) < 0) {
 		perror("Failed to calculate port");
 		exit(FAIL);
 	}
+    printf("%d %d %d %d %d %d\n", ip1,ip2, ip3, ip4, port1, port2);
 
-	memset(passive, 0, STR_LEN);
+	memset(passive, 0, sizeof(passive));
     
-	if ((sprintf(passive, "%d.%d.%d.%d", ipPart1, ipPart2, ipPart3, ipPart4))
-			< 0) {
+	if ((sprintf(passive, "%d.%d.%d.%d", ip1, ip2, ip3, ip4)) < 0) {
 		perror("Failed to form ip address.");
 		exit(FAIL);
 	}
@@ -147,6 +157,8 @@ int passiveMode(struct ftp * ftp){
     ext->ip = passive;
     ext->port = 21;
 
+    printf("piça XXX %s\n", passive);
+
     ftp->data_fd = connectSocket(ext);
 
 	return SUCCESS;
@@ -156,7 +168,7 @@ int retrive(struct ftp* ftp, struct url * url){
     char retrieve[STR_LEN];
 
     sprintf(retrieve, "RETR %s\r\n", url->file);
-    writeToSocket(ftp, retrieve, STR_LEN);
+    writeToSocket(ftp, retrieve, strlen(retrieve));
     readFromSocket(ftp, retrieve, STR_LEN);
 
     return SUCCESS;
@@ -192,7 +204,7 @@ int disconnect(struct ftp* ftp) {
 	readFromSocket(ftp, disconnect, STR_LEN);
 
 	sprintf(disconnect, "QUIT\r\n");
-	writeToSocket(ftp, disconnect, STR_LEN);
+	writeToSocket(ftp, disconnect, strlen(disconnect));
 
 	close(ftp->control_fd);
 

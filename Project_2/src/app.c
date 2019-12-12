@@ -28,10 +28,6 @@ int main(int argc, char* argv[]) {
 
   parseURL(argv[1], &url);
 
-  // TO DO: TRATAR DO ANONIMOUS
-  // if(url->user == NULL)
-  //     askforUser(url);
-
   getIP(&url);
 
   // FTP
@@ -65,6 +61,7 @@ int main(int argc, char* argv[]) {
 }
 
 void getIP(struct url* url) {
+    printf("host: %s\n", url->host);
   struct hostent* h = gethostbyname(url->host);
 
   if (h == NULL) {
@@ -72,14 +69,9 @@ void getIP(struct url* url) {
     exit(1);
   }
 
-  char* aux = inet_ntoa(*((struct in_addr*)h->h_addr_list[0]));
-
-  
+  char* aux = inet_ntoa(*((struct in_addr*)h->h_addr_list[0])); 
 
   url->ext.ip = malloc(strlen(aux) + 1);
 
-
-
   memcpy(url->ext.ip, aux, strlen(aux));
-
 }

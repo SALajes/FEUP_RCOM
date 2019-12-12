@@ -21,6 +21,6 @@ struct url
 #define SUCCESS 0
 #define FAIL    1
 
-#define STR_LEN 512
+#define STR_LEN 2048
 
 #endif

@@ -1,8 +1,8 @@
 
-#include <stdio.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,55 +10,76 @@
 #include "parser.h"
 
 #define SUCCESS 0
-#define FAIL    1
-
+#define FAIL 1
 
 void getIP(struct url* url);
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
-        exit(FAIL);
-    }
+  if (argc != 2) {
+    printf("Usage: %s ftp://[<user>:<password>@]<host>/<url-path>\n", argv[0]);
+    exit(FAIL);
+  }
 
-    struct url url;
+  struct url url;
 
-    url.ext.port = 21;
+  url.ext.port = 21;
 
-    printf("%s\n", argv[1]);
+  printf("%s\n", argv[1]);
 
-    parseURL(argv[1], &url);
+  parseURL(argv[1], &url);
 
-// TO DO: TRATAR DO ANONIMOUS
-    // if(url->user == NULL)
-    //     askforUser(url);   
+  // TO DO: TRATAR DO ANONIMOUS
+  // if(url->user == NULL)
+  //     askforUser(url);
 
-    getIP(&url);
+  getIP(&url);
 
-    //FTP
-    struct ftp* ftp;
+  // FTP
+  struct ftp ftp;
 
-    connectHost(ftp, &url);
-    loginUser(ftp, &url);
-    changeDirectory(ftp, &url);
-    passiveMode(ftp);
-    download(ftp, &url);
-    disconnect(ftp);
+  if (connectHost(&ftp, &url) != 0) {
+    printf("Something went wrong connecting with the host.\n");
+    exit(-1);
+  };
+  printf("connected\n");
+  if (loginUser(&ftp, &url) != 0) {
+    printf("Something went wrong logging in.\n");
+    exit(-1);
+  };
+  printf("logged\n");
+  if (changeDirectory(&ftp, &url) != 0) {
+    printf("Something went wrong logging in.\n");
+    exit(-1);
+  };
+  printf("changed directory\n");
+  if (passiveMode(&ftp) != 0) {
+    printf("Something went wrong logging in.\n");
+    exit(-1);
+  };
+  
+  printf("Passive mode\n");
+  download(&ftp, &url);
+  disconnect(&ftp);
 
-    return 0;
+  return 0;
 }
 
-void getIP(struct url* url){
-    struct hostent* h = gethostbyname(url->host);
+void getIP(struct url* url) {
+  struct hostent* h = gethostbyname(url->host);
 
-    if(h == NULL){
-        perror("Hostent is null\n");
-        exit(1);    
-    }
+  if (h == NULL) {
+    perror("Hostent is null\n");
+    exit(1);
+  }
 
-    char * aux = inet_ntoa(*((struct in_addr *) h->h_addr_list[0]));
+  char* aux = inet_ntoa(*((struct in_addr*)h->h_addr_list[0]));
 
-    url->ext.ip = malloc(strlen(aux) + 1);
+  
 
-    memcpy(url->ext.ip, aux, strlen(aux));
+  url->ext.ip = malloc(strlen(aux) + 1);
+
+
+
+  memcpy(url->ext.ip, aux, strlen(aux));
+
 }

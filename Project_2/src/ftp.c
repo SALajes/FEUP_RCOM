@@ -13,9 +13,10 @@
 
 int connectSocket(struct ext * ext){
     int fd;
-    struct sockaddr_in *server_address;
+    struct sockaddr_in *server_address = malloc(sizeof(*server_address));
 
-    bzero((char*) server_address, sizeof(struct sockaddr_in));
+    puts(ext->ip);
+    bzero((char*)server_address, sizeof(struct sockaddr_in));
     server_address->sin_family = AF_INET;
     server_address->sin_addr.s_addr = inet_addr(ext->ip);
     server_address->sin_port = htons(ext->port);
@@ -27,9 +28,16 @@ int connectSocket(struct ext * ext){
         exit(FAIL);
     }
 
-    if(connect(fd, (struct sockaddr *) server_address, sizeof(struct sockaddr)) < 0){
-        perror("Failed to connect");
-        exit(FAIL);
+    if (server_address->sin_addr.s_addr == -1){
+      printf("Ip conversion error");
+      exit(-1);
+    }
+
+    printf("vou conectar me a %d\n", server_address->sin_addr.s_addr);
+    if (connect(fd, (struct sockaddr*)server_address, sizeof(struct sockaddr)) <
+        0) {
+      perror("Failed to connect");
+      exit(FAIL);
     }
 
     return fd;
@@ -63,7 +71,6 @@ int readFromSocket(struct ftp* ftp, char*str, size_t size){
 int connectHost(struct ftp* ftp, struct url * url){
     int fd;
     char str[STR_LEN];
-
     fd = connectSocket(&(url->ext));
 
     ftp->control_fd = fd;

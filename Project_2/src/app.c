@@ -34,31 +34,16 @@ int main(int argc, char *argv[]) {
   printf("file: %s\n", url.file);
 
   getIP(&url);
+    printf(" main side %s\n", url.ext.ip);
 
   // FTP
   struct ftp ftp;
 
-  if (connectHost(&ftp, &url) != 0) {
-    printf("Something went wrong connecting with the host.\n");
-    exit(-1);
-  };
-  printf("connected\n");
-  if (loginUser(&ftp, &url) != 0) {
-    printf("Something went wrong logging in.\n");
-    exit(-1);
-  };
-  printf("logged\n");
-  if (changeDirectory(&ftp, &url) != 0) {
-    printf("Something went wrong logging in.\n");
-    exit(-1);
-  };
-  printf("changed directory\n");
-  if (passiveMode(&ftp) != 0) {
-    printf("Something went wrong logging in.\n");
-    exit(-1);
-  };
-
-  printf("Passive mode\n");
+  connectHost(&ftp, &url);
+  loginUser(&ftp, &url);
+  changeDirectory(&ftp, &url);
+  passiveMode(&ftp);
+  retrieve(&ftp, &url);
   download(&ftp, &url);
   disconnect(&ftp);
 

@@ -11,6 +11,6 @@ int connectHost(struct ftp* ftp, struct url * url);
 int loginUser(struct ftp * ftp, struct url * url);
 int changeDirectory(struct ftp * ftp, struct url * url);
 int passiveMode(struct ftp * ftp);
-int retrive(struct ftp* ftp, struct url * url);
+int retrieve(struct ftp* ftp, struct url * url);
 int download(struct ftp* ftp, struct url * url);
 int disconnect(struct ftp* ftp);
